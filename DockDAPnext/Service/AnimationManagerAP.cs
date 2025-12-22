@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace DockDAP.Ruls
+namespace DockDAPnext.Service
 {
     public static class AnimationManagerAP
     {

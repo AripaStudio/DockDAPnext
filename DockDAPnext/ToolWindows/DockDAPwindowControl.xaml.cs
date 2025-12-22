@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using DockDAPnext.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DockDAPnext
 {
@@ -8,11 +10,15 @@ namespace DockDAPnext
         public DockDAPwindowControl()
         {
             InitializeComponent();
+
+            var service = DockDAPnextPackage.appHost.Services;
+
+            var vm = service.GetRequiredService<MainViewModel>();
+
+            this.DataContext = vm;
+
+
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
-        {
-            VS.MessageBox.Show("DockDAPwindowControl", "Button clicked");
-        }
     }
 }

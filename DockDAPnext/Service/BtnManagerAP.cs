@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace DockDAP.Ruls
+namespace DockDAPnext.Service
 {
     public static class BtnManagerAP
     {

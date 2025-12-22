@@ -8,21 +8,57 @@
              xmlns:util="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Utilities"
              xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:toolkit="clr-namespace:Community.VisualStudio.Toolkit;assembly=Community.VisualStudio.Toolkit"
+             xmlns:uc="clr-namespace:DockDAPnext.UserControls"
              toolkit:Themes.UseVsTheme="True"
              mc:Ignorable="d"
-             d:DesignHeight="300"
-             d:DesignWidth="300"
-             Name="MyToolWindow">
-    <Grid>
-        <StackPanel Orientation="Vertical">
-            <Label x:Name="lblHeadline"
-                   Margin="10"
-                   HorizontalAlignment="Center">Title</Label>
-            <Button Content="Click me!"
-                    Click="button1_Click"
-                    Width="120"
-                    Height="80"
-                    Name="button1" />
-        </StackPanel>
+             d:DesignHeight="600"
+             d:DesignWidth="400"
+             Name="MainWindowDockDAP">
+    <Grid Background="#1E1E1E">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Margin="15" Foreground="White" 
+                   HorizontalAlignment="Center" FontSize="14" FontWeight="Bold">
+            Welcome to DockDAP by Aripa Pars Studio
+        </TextBlock>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="10,0">
+                <DockPanel Margin="0,0,0,10">
+                    <Label BorderBrush="#3F3F46" BorderThickness="1" 
+                           Content="Create dub.json File : " Foreground="White" VerticalAlignment="Center"/>
+                    <Button BorderBrush="#3F3F46" Background="#333337" Content="Create"
+                            Foreground="White" Padding="10,2" Margin="5,0,0,0"/>
+                </DockPanel>
+
+                <TabControl BorderBrush="#3F3F46" BorderThickness="1" 
+                            Background="#2D2D30" Foreground="#F1F1F1" Padding="5">
+                    <TabItem Header="Project">
+                        <uc:UCprojectDubManager/>
+                    </TabItem>
+                    <TabItem Header="Show Dub.json">
+                        <uc:UCshowDubFile/>
+                    </TabItem>
+                    <TabItem Header="Build With Dub">
+                        <uc:UCbuildDubFile/>
+                    </TabItem>
+                    <TabItem Header="About Me">
+                        <uc:UCabouteMe/>
+                    </TabItem>
+                </TabControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Background="#252526" BorderBrush="#3F3F46" BorderThickness="0,1,0,0">
+            <Button Margin="15" Padding="20,8" Background="#007ACC" 
+                    Content="Save File" Foreground="White" FontWeight="Bold"
+                    BorderThickness="0" Cursor="Hand"
+                    
+                    />
+        </Border>
     </Grid>
 </UserControl>

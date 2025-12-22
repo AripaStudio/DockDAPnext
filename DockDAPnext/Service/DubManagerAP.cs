@@ -1,4 +1,5 @@
 ﻿
+using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json;
@@ -6,12 +7,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using EnvDTE;
+using DockDAPnext.Service.InterFaces;
 using OutputWindowPane = Community.VisualStudio.Toolkit.OutputWindowPane;
+using Project = Community.VisualStudio.Toolkit.Project;
 using Windows = Community.VisualStudio.Toolkit.Windows;
 
-namespace DockDAP.Ruls
+namespace DockDAPnext.Service
 {
     public class DubConfigAP
     {
@@ -56,38 +60,51 @@ namespace DockDAP.Ruls
     }
 
 
-    public static class DubManagerAP
+    public class DubManagerAP
     {
-        public static DTE2 FindMainPathDte2AP()
-        {
-            return ServiceProvider.GlobalProvider.GetService(typeof(DTE)) as DTE2;
-        }
 
-        public static string FindDubFileAP(DTE2 dte2)
+        public async Task<string> FindDubFileAP()
         {
-            if (dte2 == null || dte2.Solution == null || dte2.Solution.Projects == null)
-            {
-                return null;
-            }
+            var GetAllProject = await VS.Solutions.GetAllProjectsAsync();
 
-            foreach (EnvDTE.Project project in dte2.Solution.Projects)
+            foreach (Project project in GetAllProject)
             {
-                string projectDirectory = System.IO.Path.GetDirectoryName(project.FullName);
-                if (projectDirectory != null)
+                if (project.FullPath != null)
                 {
-                    string dubJsonPath = System.IO.Path.Combine(projectDirectory, "dub.json");
-
-                    if (File.Exists(dubJsonPath))
+                    if (string.IsNullOrEmpty(project.FullPath))
                     {
-                        return dubJsonPath;
+                        continue;
                     }
+
+                    try
+                    {
+                        string rootPath = Path.GetDirectoryName(project.FullPath);
+
+                        if (Directory.Exists(rootPath))
+                        {
+                            var dubFile = Directory.EnumerateFiles(rootPath, "dub.json", SearchOption.AllDirectories)
+                                .FirstOrDefault();
+
+                            if (dubFile != null) return dubFile;
+                        }
+                        
+
+                      
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+
                 }
             }
+
 
             return null;
         }
 
-        public static DubConfigAP ReadDubFileAP(string path)
+        public DubConfigAP ReadDubFileAP(string path)
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
@@ -99,7 +116,7 @@ namespace DockDAP.Ruls
             return JsonConvert.DeserializeObject<DubConfigAP>(jsonString);
         }
 
-        public static DubConfigAP CreateDubFileWithDefaultsAP(string path)
+        public DubConfigAP CreateDubFileWithDefaultsAP(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -118,7 +135,7 @@ namespace DockDAP.Ruls
             return config;
         }
 
-        public static bool SaveFileDubAP(string path, DubConfigAP inputConfigAp)
+        public bool SaveFileDubAP(string path, DubConfigAP inputConfigAp)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -147,6 +164,7 @@ namespace DockDAP.Ruls
 
     public static class DubCommandAP
     {
+
         public static async Task BuildDubAsync(string projectPath, string arguments)
         {
 
@@ -157,9 +175,9 @@ namespace DockDAP.Ruls
 
             if (dubPane == null) return;
 
-            await dubPane.ActivateAsync(); 
+            await dubPane.ActivateAsync();
 
-            
+
             ProcessStartInfo processStartInfo = new ProcessStartInfo
             {
                 FileName = "dub.exe",
@@ -198,7 +216,7 @@ namespace DockDAP.Ruls
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
 
-                    await process.WaitForExitAsync(); 
+                    await process.WaitForExitAsync();
 
                     await dubPane.WriteLineAsync("Dub command finished.");
                 }
@@ -211,110 +229,95 @@ namespace DockDAP.Ruls
 
 
 
-        public static void OpenDubFileinVisualStudioAP(string path)
+        public static async Task OpenDubFileinVisualStudioAP(string path)
         {
-            DTE2 dte = DubManagerAP.FindMainPathDte2AP();
-            if (dte == null || string.IsNullOrEmpty(path) || !File.Exists(path))
+            DubManagerAP dbM = new DubManagerAP();
+            var dubFileAddress = await dbM.FindDubFileAP();
+            if (dubFileAddress == null || string.IsNullOrEmpty(dubFileAddress) || !File.Exists(dubFileAddress))
             {
                 return;
             }
 
-            dte.ItemOperations.OpenFile(path);
+            VS.Documents.OpenAsync(dubFileAddress);
         }
     }
 
-    public static class APIdockAP
+    public class APIdockAP : IdubManagerService
     {
-        public static DubConfigAP CreateOrLoadDubFileAP()
-        {
-            DTE2 dte2 = DubManagerAP.FindMainPathDte2AP();
-            if (dte2 == null)
-            {
-                return null;
-            }
+        private DubManagerAP dubManagerAP;
 
-            string dubFilePath = DubManagerAP.FindDubFileAP(dte2);
+        public APIdockAP()
+        {
+            dubManagerAP = new DubManagerAP();
+        }
+
+        public async Task<DubConfigAP> CreateOrLoadDubFileAP()
+        {
+
+
+            var dubFilePath = await dubManagerAP.FindDubFileAP();
             if (dubFilePath != null)
             {
-                return DubManagerAP.ReadDubFileAP(dubFilePath);
+                return dubManagerAP.ReadDubFileAP(dubFilePath);
             }
             else
             {
-                string projectDirectory = System.IO.Path.GetDirectoryName(dte2.Solution.Projects.Item(1).FullName);
-                string newFilePath = System.IO.Path.Combine(projectDirectory, "dub.json");
-                return DubManagerAP.CreateDubFileWithDefaultsAP(newFilePath);
+                var projectDirectory = await VS.Solutions.GetActiveProjectAsync();
+                string newFilePath = System.IO.Path.Combine(projectDirectory.FullPath, "dub.json");
+                return dubManagerAP.CreateDubFileWithDefaultsAP(newFilePath);
             }
         }
 
-        public static void BuildDubAP()
+        public async Task BuildDubAP()
         {
-            var PathFile = DubManagerAP.FindMainPathDte2AP();
-            if (PathFile == null)
-            {
-                return;
-            }
 
-            string FindDubFilePath = DubManagerAP.FindDubFileAP(PathFile);
+            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
 
             if (FindDubFilePath == null)
             {
                 return;
             }
 
-            string ProjectPath = System.IO.Path.GetDirectoryName(FindDubFilePath);
+            var ProjectPath = await VS.Solutions.GetActiveProjectAsync();
 
-            DubCommandAP.BuildDubAsync(ProjectPath, "build");
+            DubCommandAP.BuildDubAsync(ProjectPath.FullPath, "dub build");
         }
 
-        public static void BuildDebugDubAP()
+        public async Task BuildDebugDubAP()
         {
-            var PathFile = DubManagerAP.FindMainPathDte2AP();
-            if (PathFile == null)
-            {
-                return;
-            }
 
-            string FindDubFilePath = DubManagerAP.FindDubFileAP(PathFile);
+            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
 
             if (FindDubFilePath == null)
             {
                 return;
             }
 
-            string ProjectPath = System.IO.Path.GetDirectoryName(FindDubFilePath);
+            var ProjectPath = await VS.Solutions.GetActiveProjectAsync();
 
-            DubCommandAP.BuildDubAsync(ProjectPath, " build  --build=debug");
+            DubCommandAP.BuildDubAsync(ProjectPath.FullPath, "dub build  --build=debug");
         }
 
-        public static void BuildReleaseDubAP()
+        public async Task BuildReleaseDubAP()
         {
-            var PathFile = DubManagerAP.FindMainPathDte2AP();
-            if (PathFile == null)
-            {
-                return;
-            }
 
-            string FindDubFilePath = DubManagerAP.FindDubFileAP(PathFile);
+
+            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
 
             if (FindDubFilePath == null)
             {
                 return;
             }
 
-            string ProjectPath = System.IO.Path.GetDirectoryName(FindDubFilePath);
+            var ProjectPath = await VS.Solutions.GetActiveProjectAsync();
 
-            DubCommandAP.BuildDubAsync(ProjectPath, "build  --build=release");
+            DubCommandAP.BuildDubAsync(ProjectPath.FullPath, "dub build  --build=release");
         }
 
-        public static void OpenDubFileAP()
+        public async Task OpenDubFileAP()
         {
-            var PathFile = DubManagerAP.FindMainPathDte2AP();
-            if (PathFile == null)
-            {
-                return;
-            }
 
-            string FindDubFilePath = DubManagerAP.FindDubFileAP(PathFile);
+            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
 
             if (FindDubFilePath == null)
             {
@@ -324,25 +327,21 @@ namespace DockDAP.Ruls
             DubCommandAP.OpenDubFileinVisualStudioAP(FindDubFilePath);
         }
 
-        public static void SaveFileAP(DubConfigAP dubConfigAp)
+        public async Task SaveFileAP(DubConfigAP dubConfigAp)
         {
-            var PathFile = DubManagerAP.FindMainPathDte2AP();
-            if (PathFile == null)
-            {
-                return;
-            }
 
-            string FindDubFilePath = DubManagerAP.FindDubFileAP(PathFile);
+
+            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
 
             if (FindDubFilePath == null)
             {
                 return;
             }
 
-            DubManagerAP.SaveFileDubAP(FindDubFilePath, dubConfigAp);
+            dubManagerAP.SaveFileDubAP(FindDubFilePath, dubConfigAp);
         }
 
-        public static DubConfigAP AddToConfigAp(string name, string description, List<string> authors, string license,
+        public DubConfigAP AddToConfigAp(string name, string description, List<string> authors, string license,
             string targetName, string TargetType, List<string> sourceFiles, Dictionary<string, string> dependencies,
             Dictionary<string, BuildConfiguration> buildConfigurations
             , Dictionary<string, object> otherData)

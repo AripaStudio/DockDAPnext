@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="DockDAPnext.UserControls.UCprojectDubManager"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DockDAPnext.UserControls"
+             xmlns:ucprjoect="clr-namespace:DockDAPnext.UserControls.projectManagersUCs"
+             mc:Ignorable="d" 
+            >
+    <Grid>
+        <TabControl Background="#252526" BorderThickness="0">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Padding" Value="10,5"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </Style>
+            </TabControl.Resources>
+
+            <TabItem Header="Project Config">
+                <ucprjoect:UCprojectSectionManager Margin="5"/>
+            </TabItem>
+
+            <TabItem Header="Authors">
+                <ucprjoect:UCauthorsSectionManager Margin="5"/>
+            </TabItem>
+
+            <TabItem Header="Build Configs">
+                <ucprjoect:UCbuildConfigurationsSectionManager Margin="5"/>
+            </TabItem>
+
+            <TabItem Header="Dependencies">
+                <ucprjoect:UCdependenciesSectionManager Margin="5"/>
+            </TabItem>
+
+            <TabItem Header="Source Files">
+                <ucprjoect:UCsoursFilesSectionManager Margin="5"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>
