@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
 
 namespace DockDAPnext.ViewModels
 {
@@ -96,8 +97,8 @@ namespace DockDAPnext.ViewModels
             get => _selectedTargetType;
             set => this.RaiseAndSetIfChanged(ref _selectedTargetType, value);
         }
-            
-        public List<TargetTypeEnum> TargetTypeListComboBox { get;  } = new List<TargetTypeEnum>()
+
+        public List<TargetTypeEnum> TargetTypeListComboBox { get; } = new List<TargetTypeEnum>()
         {
             TargetTypeEnum.executable,
             TargetTypeEnum.sourceLibrary,
@@ -110,9 +111,180 @@ namespace DockDAPnext.ViewModels
 
 
 
-        //Dependencies
-        //build
-        //sourceFile
+        //----- Dependencies -----
+        public ReactiveCommand<Unit, Unit> ButtonCommand_AddDependency { get; }
 
+        public ReactiveCommand<Unit, Unit> ButtonCommand_RemoveSelectedDependency { get; }
+
+
+        private string _txtAddDependencyKey;
+
+        public string txtAddDependencyKey
+        {
+            get => _txtAddDependencyKey;
+            set => this.RaiseAndSetIfChanged(ref _txtAddDependencyKey, value);
+        }
+        private string _txtAddDependencyValue;
+
+        public string txtAddDependencyValue
+        {
+            get => _txtAddDependencyValue;
+            set => this.RaiseAndSetIfChanged(ref _txtAddDependencyValue, value);
+        }
+
+        private ObservableCollection<string> _dependenciesListCollection;
+        public ObservableCollection<string> dependenciesListCollection
+        {
+            get => _dependenciesListCollection;
+            set => this.RaiseAndSetIfChanged(ref _dependenciesListCollection, value);
+        }
+
+        private string _selectedDependencyRemove;
+
+        public string SelectedDependencyRemove
+        {
+            get => _selectedDependencyRemove;
+            set => this.RaiseAndSetIfChanged(ref _selectedDependencyRemove, value);
+        }
+
+
+
+        //build Configuration 
+        //----- D Flags -----
+        public ReactiveCommand<Unit, Unit> ButtonCommand_DFlag_Add { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_DFlag_Remove { get; }
+
+        private string _txtAddDFlag;
+        public string txtAddDFlag
+        {
+            get => _txtAddDFlag;
+            set => this.RaiseAndSetIfChanged(ref _txtAddDFlag, value);
+        }
+
+        private ObservableCollection<string> _dFlagsList;
+        public ObservableCollection<string> DFlagsList
+        {
+            get => _dFlagsList;
+            set => this.RaiseAndSetIfChanged(ref _dFlagsList, value);
+        }
+
+        private string _selectedDFlag;
+        public string SelectedDFlag
+        {
+            get => _selectedDFlag;
+            set => this.RaiseAndSetIfChanged(ref _selectedDFlag, value);
+        }
+
+        //----- L Flags -----
+        public ReactiveCommand<Unit, Unit> ButtonCommand_LFlag_Add { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_LFlag_Remove { get; }
+
+        private string _txtAddLFlag;
+        public string txtAddLFlag
+        {
+            get => _txtAddLFlag;
+            set => this.RaiseAndSetIfChanged(ref _txtAddLFlag, value);
+        }
+
+        private ObservableCollection<string> _lFlagsList;
+        public ObservableCollection<string> LFlagsList
+        {
+            get => _lFlagsList;
+            set => this.RaiseAndSetIfChanged(ref _lFlagsList, value);
+        }
+
+        private string _selectedLFlag;
+        public string SelectedLFlag
+        {
+            get => _selectedLFlag;
+            set => this.RaiseAndSetIfChanged(ref _selectedLFlag, value);
+        }
+
+        //----- Versions -----
+        public ReactiveCommand<Unit, Unit> ButtonCommand_Version_Add { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_Version_Remove { get; }
+
+        private string _txtAddVersion;
+        public string txtAddVersion
+        {
+            get => _txtAddVersion;
+            set => this.RaiseAndSetIfChanged(ref _txtAddVersion, value);
+        }
+
+        private ObservableCollection<string> _versionsList;
+        public ObservableCollection<string> VersionsList
+        {
+            get => _versionsList;
+            set => this.RaiseAndSetIfChanged(ref _versionsList, value);
+        }
+
+        private string _selectedVersion;
+        public string SelectedVersion
+        {
+            get => _selectedVersion;
+            set => this.RaiseAndSetIfChanged(ref _selectedVersion, value);
+        }
+
+        //----- Other Configs -----
+        public ReactiveCommand<Unit, Unit> ButtonCommand_OtherConfig_Add { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_OtherConfig_Remove { get; }
+
+        private string _txtOtherConfigName;
+        public string txtOtherConfigName
+        {
+            get => _txtOtherConfigName;
+            set => this.RaiseAndSetIfChanged(ref _txtOtherConfigName, value);
+        }
+
+        private string _txtOtherConfigValue;
+        public string txtOtherConfigValue
+        {
+            get => _txtOtherConfigValue;
+            set => this.RaiseAndSetIfChanged(ref _txtOtherConfigValue, value);
+        }
+
+        private ObservableCollection<Tuple<string, string>> _otherConfigsList;
+        public ObservableCollection<Tuple<string, string>> OtherConfigsList
+        {
+            get => _otherConfigsList;
+            set => this.RaiseAndSetIfChanged(ref _otherConfigsList, value);
+        }
+
+        private Tuple<string, string> _selectedOtherConfig;
+        public Tuple<string, string> SelectedOtherConfig
+        {
+            get => _selectedOtherConfig;
+            set => this.RaiseAndSetIfChanged(ref _selectedOtherConfig, value);
+        }
+
+
+
+        //sourceFile
+        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileAddPath;
+        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileRemovePath;
+
+
+        private string _txtAddSourcePath;
+
+        public string txtAddSourcePath
+        {
+            get => _txtAddSourcePath;
+            set => this.RaiseAndSetIfChanged(ref _txtAddSourcePath, value);
+        }
+
+        private ObservableCollection<string> _sourceFilePathListCollection;
+        public ObservableCollection<string> sourceFilePathListCollection
+        {
+            get => _sourceFilePathListCollection;
+            set => this.RaiseAndSetIfChanged(ref _sourceFilePathListCollection, value);
+        }
+
+        private string _selectedSourcePathListRemove;
+
+        public string selectedSourcePathListRemove
+        {
+            get => _selectedSourcePathListRemove;
+            set => this.RaiseAndSetIfChanged(ref _selectedSourcePathListRemove, value);
+        }
     }
 }
