@@ -322,7 +322,8 @@ namespace DockDAPnext.ViewModels
             // D Flags
             ButtonCommand_DFlag_Add = ReactiveCommand.CreateFromTask(async () =>
             {
-                
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].DFlags.Add(SelectedDFlag);
+
                 DFlagsList.Add(txtAddDFlag);
             });
 
