@@ -35,7 +35,80 @@
                             Background="#2D2D30"
                             Foreground="#F1F1F1"
                             Padding="5">
+                    <TabItem Header="Config Name" Background="#3F3F46" Foreground="#DCDCDC">
+                        <StackPanel Margin="10">
+                            <TextBlock Text="Current Build Configuration Name (e.g., debug, release)" 
+                   Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                            <Grid Margin="0,5,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                     Background="#3F3F46"
+                     Foreground="#F1F1F1"
+                     CaretBrush="#F1F1F1"
+                     BorderBrush="#555555"
+                     Padding="5"
+                     VerticalContentAlignment="Center"/>
+                                <Button Grid.Column="1"
+                    Margin="5,0,0,0"
+                    Padding="10,0"
+                    Background="#007ACC"
+                    Foreground="White"
+                    FontWeight="Bold">
+                                    <StackPanel Orientation="Horizontal">
+                                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Edit}" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock Text="Apply Name" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="* This name identifies the configuration in DUB." 
+                   Foreground="#555555" FontSize="11" FontStyle="Italic"/>
+                        </StackPanel>
+                    </TabItem>
 
+                    <TabItem Header="Build Options" Background="#3F3F46" Foreground="#DCDCDC">
+                        <StackPanel Margin="10">
+                            <TextBlock Text="Select Build Option to Add" Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                            <ComboBox Margin="0,5,0,10"
+                  Background="#3F3F46"
+                  Foreground="#F1F1F1"
+                  BorderBrush="#555555"
+                  Padding="5">
+                            </ComboBox>
+
+                            <Button Margin="0,0,0,5"
+                Width="160"
+                HorizontalAlignment="Center"
+                Background="#007ACC"
+                Foreground="White"
+                FontWeight="Bold">
+                                <StackPanel Orientation="Horizontal">
+                                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Add Option" />
+                                </StackPanel>
+                            </Button>
+
+                            <ListBox Height="100"
+                 Background="#2D2D30"
+                 Foreground="#F1F1F1"
+                 BorderBrush="#555555"
+                 Margin="0,5,0,5" />
+
+                            <Button Margin="0,5,0,0"
+                Width="160"
+                HorizontalAlignment="Center"
+                Background="#D0313C"
+                Foreground="White"
+                FontWeight="Bold">
+                                <StackPanel Orientation="Horizontal">
+                                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Remove Option" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </TabItem>
                     <TabItem Header="D Flags" Background="#3F3F46" Foreground="#DCDCDC">
                         <StackPanel Margin="10">
                             <TextBlock Text="Add D Compiler Flag (e.g., -unittest)" Foreground="#CCCCCC" Margin="0,0,0,5"/>

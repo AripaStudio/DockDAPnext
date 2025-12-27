@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
+using DockDAPnext.Service.InterFaces;
 
 namespace DockDAPnext.ViewModels
 {
@@ -285,6 +286,103 @@ namespace DockDAPnext.ViewModels
         {
             get => _selectedSourcePathListRemove;
             set => this.RaiseAndSetIfChanged(ref _selectedSourcePathListRemove, value);
+        }
+
+
+        private IdubManagerService dubManager;
+        public VMprojectDubManager(IdubManagerService dubManagerService)
+        {
+            dubManager = dubManagerService;
+
+            // Authors Section
+            ButtonCommand_Authors_Add = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Add(txtAddNewAuthors);
+            });
+
+            ButtonCommand_Authors_Rrmove = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Remove(SelectedAuthor);
+            });
+
+            // Dependencies
+            ButtonCommand_AddDependency = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies[txtAddDependencyKey] = txtAddDependencyValue;
+                dependenciesListCollection.Add($"{txtAddDependencyKey}: {txtAddDependencyValue}");
+            });
+
+            ButtonCommand_RemoveSelectedDependency = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var keyToRemove = SelectedDependencyRemove.Split(':')[0].Trim();
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies.Remove(keyToRemove);
+                dependenciesListCollection.Remove(SelectedDependencyRemove);
+            });
+
+            // D Flags
+            ButtonCommand_DFlag_Add = ReactiveCommand.CreateFromTask(async () =>
+            {
+                
+                DFlagsList.Add(txtAddDFlag);
+            });
+
+            ButtonCommand_DFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].DFlags.Remove(SelectedDFlag);
+                DFlagsList.Remove(SelectedDFlag);
+            });
+
+            // L Flags
+            ButtonCommand_LFlag_Add = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].LFlags.Add(txtAddLFlag);
+                LFlagsList.Add(txtAddLFlag);
+            });
+
+            ButtonCommand_LFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].LFlags.Remove(SelectedLFlag);
+                LFlagsList.Remove(SelectedLFlag);
+            });
+
+            // Versions
+            ButtonCommand_Version_Add = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].Versions.Add(txtAddVersion);
+                VersionsList.Add(txtAddVersion);
+            });
+
+            ButtonCommand_Version_Remove = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].Versions.Remove(SelectedVersion);
+                VersionsList.Remove(SelectedVersion);   
+            });
+
+            // Other Configs
+            ButtonCommand_OtherConfig_Add = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
+                OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
+            });
+
+            ButtonCommand_OtherConfig_Remove = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations["configurations"].OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
+                OtherConfigsList.Remove(SelectedOtherConfig);
+            });
+
+            // Source File
+            ButtonCommand_SourceFileAddPath = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Add(txtAddSourcePath);
+                sourceFilePathListCollection.Add(txtAddSourcePath);
+            });
+
+            ButtonCommand_SourceFileRemovePath = ReactiveCommand.CreateFromTask(async () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Remove(selectedSourcePathListRemove);
+                sourceFilePathListCollection.Remove(selectedSourcePathListRemove);
+            });
         }
     }
 }

@@ -37,8 +37,7 @@ namespace DockDAPnext.Service
         public Dictionary<string, string> Dependencies { get; set; } = new Dictionary<string, string>();
 
         [JsonProperty("buildConfigurations")]
-        public Dictionary<string, BuildConfiguration> BuildConfigurations { get; set; } =
-            new Dictionary<string, BuildConfiguration>();
+        public List<BuildConfiguration> BuildConfigurations { get; set; } = new List<BuildConfiguration>();
 
         [JsonExtensionData]
         public Dictionary<string, object> OtherData { get; set; } = new Dictionary<string, object>();
@@ -46,19 +45,36 @@ namespace DockDAPnext.Service
 
     public class BuildConfiguration
     {
+        [JsonProperty("name")] public string Name { get; set; }
+
         [JsonProperty("dflags")] public List<string> DFlags { get; set; } = new List<string>();
 
         [JsonProperty("lflags")] public List<string> LFlags { get; set; } = new List<string>();
 
         [JsonProperty("versions")] public List<string> Versions { get; set; } = new List<string>();
 
-        [JsonProperty("buildOptions")] public List<string> BuildOptions { get; set; } = new List<string>();
+        [JsonProperty("buildOptions")] public List<BuildOptionTypes> BuildOptions { get; set; } = new List<BuildOptionTypes>();
 
         [JsonExtensionData]
         public Dictionary<string, object> OtherDataBuildConfiguration { get; set; } = new Dictionary<string, object>();
 
     }
 
+    [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public enum BuildOptionTypes
+    {
+        debugMode,
+        releaseMode,
+        coverage,
+        unoptimized,
+        inline,
+        noBoundsCheck,
+        debugInfo,
+        optimize,     
+        warnings,
+        warningsAsErrors
+    }
+   
 
     public class DubManagerAP
     {
