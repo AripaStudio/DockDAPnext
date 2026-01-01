@@ -161,7 +161,11 @@ namespace DockDAPnext.ViewModels
         public string txtNameBuildConfig
         {
             get => _txtNameBuildConfig;
-            set => this.RaiseAndSetIfChanged(ref _txtNameBuildConfig, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _txtNameBuildConfig, value);
+                SetCurrentConfigIndex();
+            }
         }
 
         //----- D Flags -----
@@ -301,6 +305,20 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedSourcePathListRemove, value);
         }
 
+        private void SetCurrentConfigIndex()
+        {
+            var index = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
+                .FindIndex(s => s.Name == txtNameBuildConfig);
+
+            if (index == -1)
+            {
+                MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
+            }
+
+            CurrentBuildConfigID = index;
+        }
+
+        private int CurrentBuildConfigID = 0;
 
         private IdubManagerService dubManager;
         public VMprojectDubManager(IdubManagerService dubManagerService)
@@ -335,134 +353,72 @@ namespace DockDAPnext.ViewModels
             // D Flags
             ButtonCommand_DFlag_Add = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].DFlags.Add(SelectedDFlag);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Add(SelectedDFlag);
+                DFlagsList.Add(txtAddDFlag);
 
-                    DFlagsList.Add(txtAddDFlag);
-                }
-               
             });
 
             ButtonCommand_DFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].DFlags.Remove(SelectedDFlag);
-                    DFlagsList.Remove(SelectedDFlag);
-                }
-               
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Remove(SelectedDFlag);
+                DFlagsList.Remove(SelectedDFlag);
+
             });
 
             // L Flags
             ButtonCommand_LFlag_Add = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].LFlags.Add(txtAddLFlag);
-                    LFlagsList.Add(txtAddLFlag);
-                }
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Add(txtAddLFlag);
+                LFlagsList.Add(txtAddLFlag);
+
 
             });
 
             ButtonCommand_LFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].LFlags.Remove(SelectedLFlag);
-                    LFlagsList.Remove(SelectedLFlag);
-                }
-                
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Remove(SelectedLFlag);
+                LFlagsList.Remove(SelectedLFlag);
+
+
             });
 
             // Versions
             ButtonCommand_Version_Add = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].Versions.Add(txtAddVersion);
-                    VersionsList.Add(txtAddVersion);
-                }
-              
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Add(txtAddVersion);
+                VersionsList.Add(txtAddVersion);
+
+
             });
 
             ButtonCommand_Version_Remove = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].Versions.Remove(SelectedVersion);
-                    VersionsList.Remove(SelectedVersion);
-                }
-                
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Remove(SelectedVersion);
+                VersionsList.Remove(SelectedVersion);
+
+
             });
 
             // Other Configs
             ButtonCommand_OtherConfig_Add = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
-                    OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
-                }
-                
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
+                OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
+
+
             });
 
             ButtonCommand_OtherConfig_Remove = ReactiveCommand.CreateFromTask(async () =>
             {
-                var configId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                    .FindIndex(s => s.Name == txtNameBuildConfig);
-                if (configId == -1)
-                {
-                    MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                }
-                else
-                {
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[configId].OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
-                    OtherConfigsList.Remove(SelectedOtherConfig);
-                }
-              
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
+                OtherConfigsList.Remove(SelectedOtherConfig);
+
+
             });
 
             // Source File
