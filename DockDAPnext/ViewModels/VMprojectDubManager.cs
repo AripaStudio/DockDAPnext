@@ -52,7 +52,11 @@ namespace DockDAPnext.ViewModels
         public string txtName_Project
         {
             get => _txtName_Project;
-            set => this.RaiseAndSetIfChanged(ref _txtName_Project, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _txtName_Project, value);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Name = _txtName_Project;
+            }
         }
 
         private string _txtDescription_Project;
@@ -60,8 +64,15 @@ namespace DockDAPnext.ViewModels
         public string txtDescription_Project
         {
             get => _txtDescription_Project;
-            set => this.RaiseAndSetIfChanged(ref _txtDescription_Project, value);
+
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _txtDescription_Project, value);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.Description = _txtDescription_Project;
+            }
         }
+
+
 
 
         private string _txtLicense_project;
@@ -69,7 +80,11 @@ namespace DockDAPnext.ViewModels
         public string txtLicense_project
         {
             get => _txtLicense_project;
-            set => this.RaiseAndSetIfChanged(ref _txtLicense_project, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _txtLicense_project, value);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.License = _txtLicense_project;
+            }
         }
 
 
@@ -78,7 +93,11 @@ namespace DockDAPnext.ViewModels
         public string txtTargetName_project
         {
             get => _txtTargetName_project;
-            set => this.RaiseAndSetIfChanged(ref _txtTargetName_project, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _txtTargetName_project, value);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.TargetName = _txtTargetName_project;
+            }
         }
 
         public enum TargetTypeEnum
@@ -97,7 +116,11 @@ namespace DockDAPnext.ViewModels
         public TargetTypeEnum SelectedTargetType
         {
             get => _selectedTargetType;
-            set => this.RaiseAndSetIfChanged(ref _selectedTargetType, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedTargetType, value);
+                CurrentDubFileConfigAP.CurrentDubConfigAp.TargetType = _selectedTargetType.ToString();
+            }
         }
 
         public List<TargetTypeEnum> TargetTypeListComboBox { get; } = new List<TargetTypeEnum>()
@@ -167,6 +190,43 @@ namespace DockDAPnext.ViewModels
                 SetCurrentConfigIndex();
             }
         }
+
+        public ReactiveCommand<Unit, Unit> ButtonCommand_ApplayNameBuildConfigurations { get; }
+
+        public ReactiveCommand<Unit, Unit> ButtonCommand_AddNewNameBuildConfiguarations { get; }
+
+        public ReactiveCommand<Unit, Unit> ButtonCommand_DeleteNameConfigurations { get; }
+
+        private string _txtAddNewConfigurationsName;
+
+        public string txtAddNewConfigurationsName
+        {
+            get => _txtAddNewConfigurationsName;
+            set => this.RaiseAndSetIfChanged(ref _txtAddNewConfigurationsName, value);
+        }
+
+
+        private ObservableCollection<string> _nameConfigListCollection;
+
+        public ObservableCollection<string> NameConfigListCollection
+        {
+            get => _nameConfigListCollection;
+            set => this.RaiseAndSetIfChanged(ref _nameConfigListCollection, value);
+        }
+
+        private string _selectedDeletedNameConfigOfList;
+
+        public string SelectedDeletedNameConfigOfList
+        {
+            get => _selectedDeletedNameConfigOfList;
+            set => this.RaiseAndSetIfChanged(ref _selectedDeletedNameConfigOfList, value);
+        }
+
+
+
+
+
+
 
         //----- D Flags -----
         public ReactiveCommand<Unit, Unit> ButtonCommand_DFlag_Add { get; }
@@ -313,6 +373,8 @@ namespace DockDAPnext.ViewModels
             if (index == -1)
             {
                 MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
+                CurrentBuildConfigID = 0;
+                return;
             }
 
             CurrentBuildConfigID = index;
@@ -325,111 +387,202 @@ namespace DockDAPnext.ViewModels
         {
             dubManager = dubManagerService;
 
-            // Authors Section
-            ButtonCommand_Authors_Add = ReactiveCommand.CreateFromTask(async () =>
+
+            //name Config - build configurations
+            ButtonCommand_ApplayNameBuildConfigurations = ReactiveCommand.Create( () =>
             {
+                SetCurrentConfigIndex();
+                if (NameConfigListCollection.Any(s => s != txtNameBuildConfig))
+                {
+                    NameConfigListCollection.Add(txtNameBuildConfig);
+                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Name =
+                        txtNameBuildConfig;
+                }
+                
+            });
+
+            ButtonCommand_DeleteNameConfigurations = ReactiveCommand.Create( () =>
+            {
+                if (string.IsNullOrWhiteSpace(SelectedDeletedNameConfigOfList))
+                {
+                    MessageBox.Show("No configuration name selected to delete");
+                    return;
+                }
+                var selectedId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
+                    .FindIndex(s => s.Name == SelectedDeletedNameConfigOfList);
+                if (selectedId == -1)
+                {
+                    MessageBox.Show("Configuration name not found");
+                    return;
+                }
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations.RemoveAt(selectedId);
+                NameConfigListCollection.Remove(SelectedDeletedNameConfigOfList);
+            });
+
+
+            ButtonCommand_AddNewNameBuildConfiguarations = ReactiveCommand.Create( () =>
+            {
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Name =
+                    txtAddNewConfigurationsName;
+                NameConfigListCollection.Add(txtAddNewConfigurationsName);
+            });
+
+            // Authors Section
+            ButtonCommand_Authors_Add = ReactiveCommand.Create(() =>
+            {
+                if (string.IsNullOrWhiteSpace(txtAddNewAuthors))
+                {
+                    MessageBox.Show("The input is invalid or is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Add(txtAddNewAuthors);
             });
 
-            ButtonCommand_Authors_Rrmove = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_Authors_Rrmove = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(SelectedAuthor))
+                {
+                    MessageBox.Show("No author selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Remove(SelectedAuthor);
             });
 
             // Dependencies
-            ButtonCommand_AddDependency = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_AddDependency = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(txtAddDependencyKey) || string.IsNullOrWhiteSpace(txtAddDependencyValue))
+                {
+                    MessageBox.Show("Dependency key or value is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies[txtAddDependencyKey] = txtAddDependencyValue;
                 dependenciesListCollection.Add($"{txtAddDependencyKey}: {txtAddDependencyValue}");
             });
 
-            ButtonCommand_RemoveSelectedDependency = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_RemoveSelectedDependency = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(SelectedDependencyRemove))
+                {
+                    MessageBox.Show("No dependency selected to remove");
+                    return;
+                }
                 var keyToRemove = SelectedDependencyRemove.Split(':')[0].Trim();
                 CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies.Remove(keyToRemove);
                 dependenciesListCollection.Remove(SelectedDependencyRemove);
             });
 
             // D Flags
-            ButtonCommand_DFlag_Add = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_DFlag_Add = ReactiveCommand.Create(() =>
             {
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Add(SelectedDFlag);
+                if (string.IsNullOrWhiteSpace(txtAddDFlag))
+                {
+                    MessageBox.Show("D Flag input is empty");
+                    return;
+                }
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Add(txtAddDFlag);
                 DFlagsList.Add(txtAddDFlag);
-
             });
 
-            ButtonCommand_DFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_DFlag_Remove = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(SelectedDFlag))
+                {
+                    MessageBox.Show("No D Flag selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Remove(SelectedDFlag);
                 DFlagsList.Remove(SelectedDFlag);
-
             });
 
             // L Flags
-            ButtonCommand_LFlag_Add = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_LFlag_Add = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(txtAddLFlag))
+                {
+                    MessageBox.Show("L Flag input is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Add(txtAddLFlag);
                 LFlagsList.Add(txtAddLFlag);
-
-
             });
 
-            ButtonCommand_LFlag_Remove = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_LFlag_Remove = ReactiveCommand.Create(() =>
             {
-
+                if (string.IsNullOrWhiteSpace(SelectedLFlag))
+                {
+                    MessageBox.Show("No L Flag selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Remove(SelectedLFlag);
                 LFlagsList.Remove(SelectedLFlag);
-
-
             });
 
             // Versions
-            ButtonCommand_Version_Add = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_Version_Add = ReactiveCommand.Create(() =>
             {
-
+                if (string.IsNullOrWhiteSpace(txtAddVersion))
+                {
+                    MessageBox.Show("Version input is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Add(txtAddVersion);
                 VersionsList.Add(txtAddVersion);
-
-
             });
 
-            ButtonCommand_Version_Remove = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_Version_Remove = ReactiveCommand.Create(() =>
             {
-
+                if (string.IsNullOrWhiteSpace(SelectedVersion))
+                {
+                    MessageBox.Show("No version selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Remove(SelectedVersion);
                 VersionsList.Remove(SelectedVersion);
-
-
             });
 
             // Other Configs
-            ButtonCommand_OtherConfig_Add = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_OtherConfig_Add = ReactiveCommand.Create(() =>
             {
-
+                if (string.IsNullOrWhiteSpace(txtOtherConfigName) || string.IsNullOrWhiteSpace(txtOtherConfigValue))
+                {
+                    MessageBox.Show("Config name or value is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
                 OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
-
-
             });
 
-            ButtonCommand_OtherConfig_Remove = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_OtherConfig_Remove = ReactiveCommand.Create(() =>
             {
-
+                if (SelectedOtherConfig == null || string.IsNullOrWhiteSpace(SelectedOtherConfig.Item1))
+                {
+                    MessageBox.Show("No configuration selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
                 OtherConfigsList.Remove(SelectedOtherConfig);
-
-
             });
 
             // Source File
-            ButtonCommand_SourceFileAddPath = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_SourceFileAddPath = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(txtAddSourcePath))
+                {
+                    MessageBox.Show("Source file path is empty");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Add(txtAddSourcePath);
                 sourceFilePathListCollection.Add(txtAddSourcePath);
             });
 
-            ButtonCommand_SourceFileRemovePath = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_SourceFileRemovePath = ReactiveCommand.Create(() =>
             {
+                if (string.IsNullOrWhiteSpace(selectedSourcePathListRemove))
+                {
+                    MessageBox.Show("No source file path selected to remove");
+                    return;
+                }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Remove(selectedSourcePathListRemove);
                 sourceFilePathListCollection.Remove(selectedSourcePathListRemove);
             });
