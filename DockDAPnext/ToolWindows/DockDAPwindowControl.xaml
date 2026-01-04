@@ -31,7 +31,7 @@
                 <DockPanel Margin="0,0,0,10">
                     <Label BorderBrush="#3F3F46" BorderThickness="1" 
                            Content="Create dub.json File : " Foreground="White" VerticalAlignment="Center"/>
-                    <Button BorderBrush="#3F3F46" Background="#333337" Content="Create"
+                    <Button BorderBrush="#3F3F46" Background="#333337" Content="Create or load File"
                             Foreground="White" Padding="10,2" Margin="5,0,0,0"/>
                 </DockPanel>
 

@@ -22,7 +22,7 @@ namespace DockDAPnext.Service.InterFaces
 
         public DubConfigAP AddToConfigAp(string name, string description, List<string> authors, string license,
             string targetName, string TargetType, List<string> sourceFiles, Dictionary<string, string> dependencies,
-            Dictionary<string, BuildConfiguration> buildConfigurations
+            List<BuildConfiguration> buildConfigurations
             , Dictionary<string, object> otherData);
     }
 }
