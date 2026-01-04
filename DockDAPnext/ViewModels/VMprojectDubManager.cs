@@ -16,7 +16,7 @@ namespace DockDAPnext.ViewModels
     public class VMprojectDubManager : BaseViewModel
     {
 
-        //----- Authors Section ----
+        #region ----- Authors Section ----
         public ReactiveCommand<Unit, Unit> ButtonCommand_Authors_Add { get; }
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_Authors_Remove { get; }
@@ -45,8 +45,9 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedAuthor, value);
         }
 
+        #endregion
+        #region ----- Project Configuration ----
 
-        //----- Project Configuration ----
         private string _txtName_Project;
 
         public string txtName_Project
@@ -134,9 +135,8 @@ namespace DockDAPnext.ViewModels
             TargetTypeEnum.none
         };
 
-
-
-        //----- Dependencies -----
+        #endregion
+        #region ----- Dependencies -----
         public ReactiveCommand<Unit, Unit> ButtonCommand_AddDependency { get; }
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_RemoveSelectedDependency { get; }
@@ -175,8 +175,10 @@ namespace DockDAPnext.ViewModels
         }
 
 
+        #endregion
+        #region build Configuration 
 
-        //build Configuration 
+
 
         //----- Name Config ----
         private string _txtNameBuildConfig;
@@ -335,9 +337,8 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedOtherConfig, value);
         }
 
-
-
-        //sourceFile
+        #endregion
+        #region sourceFile
         public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileAddPath;
         public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileRemovePath;
 
@@ -364,6 +365,8 @@ namespace DockDAPnext.ViewModels
             get => _selectedSourcePathListRemove;
             set => this.RaiseAndSetIfChanged(ref _selectedSourcePathListRemove, value);
         }
+        #endregion
+
 
         private void SetCurrentConfigIndex()
         {

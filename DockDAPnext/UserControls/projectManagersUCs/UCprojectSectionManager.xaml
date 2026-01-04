@@ -50,6 +50,7 @@
                                      CaretBrush="#F1F1F1"
                                      BorderBrush="#555555"
                                      Padding="5"
+                                     Text="{Binding vmProjectDubManager.txtName_Project , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -65,6 +66,7 @@
                                      CaretBrush="#F1F1F1"
                                      BorderBrush="#555555"
                                      Padding="5"
+                                     Text="{Binding vmProjectDubManager.txtDescription_Project , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -80,6 +82,7 @@
                                      CaretBrush="#F1F1F1"
                                      BorderBrush="#555555"
                                      Padding="5"
+                                     Text="{Binding vmProjectDubManager.txtLicense_project , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -95,6 +98,7 @@
                                      CaretBrush="#F1F1F1"
                                      BorderBrush="#555555"
                                      Padding="5"
+                                     Text="{Binding vmProjectDubManager.txtTargetName_project , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -109,7 +113,8 @@
                                       Foreground="#F1F1F1"
                                       BorderBrush="#555555"
                                       Padding="5"
-                                      
+                                      ItemsSource="{Binding vmProjectDubManager.TargetTypeListComboBox}"
+                                      SelectedItem="{Binding vmProjectDubManager.SelectedTargetType}"
                                       
                                       ToolTip="Select the type of executable to build (e.g., executable, library, none).">
                             </ComboBox>
