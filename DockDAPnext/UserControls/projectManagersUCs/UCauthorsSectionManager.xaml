@@ -50,6 +50,7 @@
                              Padding="5"
                              Margin="0,0,10,0"
                              ToolTip="Enter the name of the new author."
+                             Text="{Binding vmProjectDubManager.txtAddNewAuthors , UpdateSourceTrigger=PropertyChanged}"
                              />
 
                     <Button Grid.Column="1"
@@ -57,6 +58,7 @@
                             Background="#007ACC"
                             Foreground="White"
                             FontWeight="Bold"
+                            Command="{Binding vmProjectDubManager.ButtonCommand_Authors_Add}"
                             >
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
@@ -77,7 +79,8 @@
 
                 <ListBox 
                     Height="150"
-                    
+                    ItemsSource="{Binding vmProjectDubManager.AuthorsList}"
+                    SelectedItem="{Binding vmProjectDubManager.SelectedAuthor}"
                     Background="#2D2D30"
                     Foreground="#F1F1F1"
                     BorderBrush="#555555"
@@ -91,7 +94,9 @@
                     FontWeight="Bold"
                     
                     HorizontalAlignment="Center"
-                    ToolTip="Removes the currently selected author from the list.">
+                    ToolTip="Removes the currently selected author from the list."
+                    Command="{Binding vmProjectDubManager.ButtonCommand_Authors_Remove}"
+                    >
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>

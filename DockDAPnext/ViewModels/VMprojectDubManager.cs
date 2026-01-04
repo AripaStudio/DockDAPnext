@@ -19,7 +19,7 @@ namespace DockDAPnext.ViewModels
         //----- Authors Section ----
         public ReactiveCommand<Unit, Unit> ButtonCommand_Authors_Add { get; }
 
-        public ReactiveCommand<Unit, Unit> ButtonCommand_Authors_Rrmove { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_Authors_Remove { get; }
 
         private string _txtAddNewAuthors;
 
@@ -438,7 +438,7 @@ namespace DockDAPnext.ViewModels
                 CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Add(txtAddNewAuthors);
             });
 
-            ButtonCommand_Authors_Rrmove = ReactiveCommand.Create(() =>
+            ButtonCommand_Authors_Remove = ReactiveCommand.Create(() =>
             {
                 if (string.IsNullOrWhiteSpace(SelectedAuthor))
                 {
