@@ -50,14 +50,14 @@
                              Padding="5"
                              Margin="0,0,10,0"
                              ToolTip="Enter the relative path for the source file or directory."
-                             />
+                             Text="{Binding vmProjectDubManager.txtAddSourcePath, UpdateSourceTrigger=PropertyChanged}" />
 
                     <Button Grid.Column="1"
                             Width="120"
                             Background="#007ACC"
                             Foreground="White"
                             FontWeight="Bold"
-                            >
+                            Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileAddPath}">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
                                 <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -77,21 +77,22 @@
 
                 <ListBox 
                     Height="150"
-                    
                     Background="#2D2D30"
                     Foreground="#F1F1F1"
                     BorderBrush="#555555"
                     SelectionMode="Single"
-                    Margin="0,0,0,10" />
+                    Margin="0,0,0,10"
+                    ItemsSource="{Binding vmProjectDubManager.sourceFilePathListCollection}" 
+                    SelectedItem="{Binding vmProjectDubManager.selectedSourcePathListRemove}" />
 
                 <Button 
                     Width="220"
                     Background="#D0313C" 
                     Foreground="White"
                     FontWeight="Bold"
-                    
                     HorizontalAlignment="Center"
-                    ToolTip="Removes the currently selected path from the source list.">
+                    ToolTip="Removes the currently selected path from the source list."
+                    Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileRemovePath}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>

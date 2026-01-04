@@ -337,6 +337,49 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedOtherConfig, value);
         }
 
+        // ----- Build Options -----
+        private ObservableCollection<BuildOptionTypes> _buildOptionsList;
+        public ObservableCollection<BuildOptionTypes> BuildOptionsList
+        {
+            get => _buildOptionsList;
+            set => this.RaiseAndSetIfChanged(ref _buildOptionsList, value);
+        }
+
+        private List<BuildOptionTypes> _buildOptionTypesComboBox;
+
+        public List<BuildOptionTypes> BuildPOptionTypesComboBox { get; } = new List<BuildOptionTypes>
+        {
+            BuildOptionTypes.debugMode,
+            BuildOptionTypes.releaseMode,
+            BuildOptionTypes.coverage,
+            BuildOptionTypes.unoptimized,
+            BuildOptionTypes.inline,
+            BuildOptionTypes.noBoundsCheck,
+            BuildOptionTypes.debugInfo,
+            BuildOptionTypes.optimize,
+            BuildOptionTypes.warnings,
+            BuildOptionTypes.warningsAsErrors
+        };
+
+        private BuildOptionTypes _selectedBuildOptionComboBox;
+        public BuildOptionTypes SelectedBuildOptionComboBox
+        {
+            get => _selectedBuildOptionComboBox;
+            set => this.RaiseAndSetIfChanged(ref _selectedBuildOptionComboBox, value);
+        }
+
+
+
+        private BuildOptionTypes _selectedBuildOption;
+        public BuildOptionTypes SelectedBuildOption
+        {
+            get => _selectedBuildOption;
+            set => this.RaiseAndSetIfChanged(ref _selectedBuildOption, value);
+        }
+
+        public ReactiveCommand<Unit, Unit> ButtonCommand_AddBuildOption { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_RemoveBuildOption { get; }
+
         #endregion
         #region sourceFile
         public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileAddPath;
@@ -588,6 +631,33 @@ namespace DockDAPnext.ViewModels
                 }
                 CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Remove(selectedSourcePathListRemove);
                 sourceFilePathListCollection.Remove(selectedSourcePathListRemove);
+            });
+
+            // Build Options
+
+            ButtonCommand_AddBuildOption = ReactiveCommand.Create(() =>
+            {
+                if (BuildOptionsList.Contains(SelectedBuildOption))
+                {
+                    MessageBox.Show("This build option is already added.");
+                    return;
+                }
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].BuildOptions.Add(SelectedBuildOptionComboBox);
+                
+                BuildOptionsList.Add(SelectedBuildOptionComboBox);
+            });
+
+            ButtonCommand_RemoveBuildOption = ReactiveCommand.Create(() =>
+            {
+                if (SelectedBuildOption == null)
+                {
+                    MessageBox.Show("No build option selected to remove.");
+                    return;
+                }
+
+                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].BuildOptions
+                    .Remove(SelectedBuildOption);
+                BuildOptionsList.Remove(SelectedBuildOption);
             });
         }
     }
