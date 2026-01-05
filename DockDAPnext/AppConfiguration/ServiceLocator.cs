@@ -12,6 +12,16 @@ namespace DockDAPnext.AppConfiguration
 {
     public static class ServiceLocator
     {
+        public static IServiceProvider Provider { get; private set; }
+
+        public static void Build()
+        {
+            var service = new ServiceCollection();
+
+            service.ConfigurationServices();
+
+            Provider = service.BuildServiceProvider();
+        }
         public static IServiceCollection ConfigurationServices(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IdubManagerService, APIdockAP>();

@@ -5,17 +5,18 @@
   <Extern href="vsshlids.h"/>
   <Include href="KnownImageIds.vsct"/>
   <Include href="VSGlobals.vsct"/>
-
-  <Commands package="DockDAPnext">
+  
+  
+  <Commands package="guidDockDAPnextPackage">
 	  <Groups>
-		  <Group guid="DockDAPnext" id="ToolsMenuGrouping" priority="0x0101">
+		  <Group guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" priority="0x0101">
 			  <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
 		  </Group>
 	  </Groups>
 
 	  <Buttons>
-		  <Button guid="DockDAPnext" id="ShowDockDAPwindowCommand" priority="0x0100" type="Button">
-			  <Parent guid="DockDAPnext" id="ToolsMenuGrouping" />
+		  <Button guid="guidDockDAPnextPackageCmdSet" id="ShowDockDAPwindowCommand" priority="0x0100" type="Button">
+			  <Parent guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" />
 			  <Strings>
 				  <ButtonText>Open DockDAP</ButtonText>
 			  </Strings>
@@ -24,10 +25,13 @@
   </Commands>
 
   <Symbols>
-	  <GuidSymbol name="DockDAPnext" value="{df11ccf0-1b9d-4bf7-b2b4-22768646962c}">
+	  <GuidSymbol name="guidDockDAPnextPackage" value="{df11ccf0-1b9d-4bf7-b2b4-22768646962c}" />
 
+	  <GuidSymbol name="guidDockDAPnextPackageCmdSet" value="{CF2F943D-81C9-4C79-830A-30224C0AF594}">
 		  <IDSymbol name="ShowDockDAPwindowCommand" value="0x0100"/>
-		  <IDSymbol name="ToolsMenuGrouping" value="0x0101">"></IDSymbol>		  
+		  <IDSymbol name="ToolsMenuGrouping" value="0x0101" />
 	  </GuidSymbol>
-  </Symbols>
+  </Symbols> 
+
+
 </CommandTable>

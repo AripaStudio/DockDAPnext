@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DockDAPnext.AppConfiguration;
 
 namespace DockDAPnext.UserControls.projectManagersUCs
 {
@@ -30,11 +31,9 @@ namespace DockDAPnext.UserControls.projectManagersUCs
             {
                 return;
             }
-            if (DockDAPnextPackage.appHost != null)
+            if (ServiceLocator.Provider != null)
             {
-                var service = DockDAPnextPackage.appHost.Services;
-
-                var vm = service.GetRequiredService<MainViewModel>();
+                var vm = ServiceLocator.Provider.GetService<MainViewModel>();
 
                 this.DataContext = vm;
             }

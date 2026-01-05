@@ -1,4 +1,5 @@
-﻿using DockDAPnext.ViewModels;
+﻿using DockDAPnext.AppConfiguration;
+using DockDAPnext.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -30,11 +31,9 @@ namespace DockDAPnext.UserControls.projectManagersUCs
             {
                 return;
             }
-            if (DockDAPnextPackage.appHost != null)
+            if (ServiceLocator.Provider != null)
             {
-                var service = DockDAPnextPackage.appHost.Services;
-
-                var vm = service.GetRequiredService<MainViewModel>();
+                var vm = ServiceLocator.Provider.GetService<MainViewModel>();
 
                 this.DataContext = vm;
             }

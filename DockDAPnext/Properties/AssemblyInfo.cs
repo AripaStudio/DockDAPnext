@@ -1,6 +1,8 @@
 ﻿using DockDAPnext;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Shell;
+[assembly: ProvideBindingRedirection]
 
 [assembly: AssemblyTitle(Vsix.Name)]
 [assembly: AssemblyDescription(Vsix.Description)]
@@ -15,6 +17,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersion(Vsix.Version)]
 [assembly: AssemblyFileVersion(Vsix.Version)]
+
 
 namespace System.Runtime.CompilerServices
 {

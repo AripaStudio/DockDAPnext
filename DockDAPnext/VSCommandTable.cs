@@ -13,8 +13,11 @@ namespace DockDAPnext
     /// </summary>
     internal sealed partial class PackageGuids
     {
-        public const string DockDAPnextString = "df11ccf0-1b9d-4bf7-b2b4-22768646962c";
-        public static Guid DockDAPnext = new Guid(DockDAPnextString);
+        public const string guidDockDAPnextPackageString = "df11ccf0-1b9d-4bf7-b2b4-22768646962c";
+        public static Guid guidDockDAPnextPackage = new Guid(guidDockDAPnextPackageString);
+
+        public const string guidDockDAPnextPackageCmdSetString = "cf2f943d-81c9-4c79-830a-30224c0af594";
+        public static Guid guidDockDAPnextPackageCmdSet = new Guid(guidDockDAPnextPackageCmdSetString);
     }
 
     /// <summary>

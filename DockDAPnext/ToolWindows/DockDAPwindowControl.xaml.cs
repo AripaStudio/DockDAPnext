@@ -1,7 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using DockDAPnext.AppConfiguration;
 using DockDAPnext.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace DockDAPnext
 {
@@ -11,11 +12,12 @@ namespace DockDAPnext
         {
             InitializeComponent();
 
-            var service = DockDAPnextPackage.appHost.Services;
+            if (ServiceLocator.Provider != null)
+            {
+                var vm = ServiceLocator.Provider.GetService<MainViewModel>();
 
-            var vm = service.GetRequiredService<MainViewModel>();
-
-            this.DataContext = vm;
+                this.DataContext = vm;
+            }
 
 
         }
