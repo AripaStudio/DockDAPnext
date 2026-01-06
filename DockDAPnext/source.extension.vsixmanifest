@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
-	<Metadata>
-		<Identity Id="DockDAPnext.9893225d-605a-42c9-8c81-09cd89f8b038" Version="1.0.0" Language="en-US" Publisher="AripaStudio" />
-		<DisplayName>DockDAPnext</DisplayName>
-		<Description xml:space="preserve">A Dub Mangaer Extensions by Aripa Pars Studio (my name is "Khashayar Mobasheri(abolfazl))
+    <Metadata>
+        <Identity Id="DockDAPnext.9893225d-605a-42c9-8c81-09cd89f8b038" Version="1.0.0" Language="en-US" Publisher="AripaStudio" />
+        <DisplayName>DockDAPnext</DisplayName>
+        <Description xml:space="preserve">A Dub Mangaer Extensions by Aripa Pars Studio (my name is "Khashayar Mobasheri(abolfazl))
 Method:
 Go to the Tools section and click on the OpenDubDAP button. 
 A window will open next to your solution, from where you can manage it. 
 I would appreciate it if you could let us know if you encounter any issues. 
 Thank you, AripaPars Studio.</Description>
-		<MoreInfo>https://github.com/AripaStudio/DockDAPnext</MoreInfo>
-		<License>LICENSE.txt</License>
-		<Icon>Resources\DockDAP_Icon.png</Icon>
-		<Tags>Dub , Dlang , AripaStudio , AripaParsStudio , AtraAripaStudio , Extension</Tags>
-	</Metadata>
-	<Installation>
-		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
-			<ProductArchitecture>amd64</ProductArchitecture>
-		</InstallationTarget>
-	</Installation>
-	<Prerequisites>
-		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,)" DisplayName="Visual Studio core editor" />
-	</Prerequisites>
-	<Assets>
-		<Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
-	</Assets>
+        <MoreInfo>https://github.com/AripaStudio/DockDAPnext</MoreInfo>
+        <License>LICENSE.txt</License>
+        <Icon>Resources\DockDAP_Icon.png</Icon>
+        <Tags>Dub , Dlang , AripaStudio , AripaParsStudio , AtraAripaStudio , Extension</Tags>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
 </PackageManifest>

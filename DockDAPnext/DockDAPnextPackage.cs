@@ -26,16 +26,18 @@ namespace DockDAPnext
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
 
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
             MessageBox.Show("DockDAP is Run");
 
             await base.InitializeAsync(cancellationToken, progress);
 
 
-            ServiceLocator.Build();
+            //ServiceLocator.Build();
 
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            
 
-            await this.RegisterCommandsAsync();
+            //await this.RegisterCommandsAsync();
 
             
 
