@@ -4,9 +4,8 @@
   <Extern href="stdidcmd.h"/>
   <Extern href="vsshlids.h"/>
   <Include href="KnownImageIds.vsct"/>
-  <Include href="VSGlobals.vsct"/>
-  
-  
+  <Include href="VSGlobals.vsct"/>	
+
   <Commands package="guidDockDAPnextPackage">
 	  <Groups>
 		  <Group guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" priority="0x0101">

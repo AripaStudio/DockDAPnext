@@ -33,11 +33,11 @@ namespace DockDAPnext
             await base.InitializeAsync(cancellationToken, progress);
 
 
-            //ServiceLocator.Build();
+            ServiceLocator.Build();
 
             
 
-            //await this.RegisterCommandsAsync();
+            await this.RegisterCommandsAsync();
 
             
 
