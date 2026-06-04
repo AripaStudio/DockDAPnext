@@ -12,13 +12,13 @@ namespace DockDAPnext
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration(Vsix.Name, Vsix.Description, Vsix.Version)]
-    [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid("df11ccf0-1b9d-4bf7-b2b4-22768646962c")]
+    [ProvideMenuResource("VSCommandTable.ctmenu", 1)]
+    [Guid(PackageGuids.guidDockDAPnextPackageString)]
     [ProvideToolWindow(typeof(DockDAPwindow)
     ,Style = VsDockStyle.Tabbed
     , Window = "3AE79031-E1BC-11D0-8F78-00A0C9110057"
     , Orientation = ToolWindowOrientation.Right)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string , PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string , PackageAutoLoadFlags.BackgroundLoad)]
     public sealed class DockDAPnextPackage : ToolkitPackage
     {
 

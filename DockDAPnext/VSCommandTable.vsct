@@ -1,36 +1,37 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <Extern href="stdidcmd.h"/>
-  <Extern href="vsshlids.h"/>
-  <Include href="KnownImageIds.vsct"/>
-  <Include href="VSGlobals.vsct"/>	
+	<Extern href="stdidcmd.h"/>
+	<Extern href="vsshlids.h"/>
+	<Include href="KnownImageIds.vsct"/>
+	<Include href="VSGlobals.vsct"/>
 
-  <Commands package="guidDockDAPnextPackage">
-	  <Groups>
-		  <Group guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" priority="0x0101">
-			  <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
-		  </Group>
-	  </Groups>
+	<Commands package="guidDockDAPnextPackage">
+		<Groups>
+			<Group guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" priority="0x0101">
+				<Parent guid="VSMainMenu" id="Tools"/>
+			</Group>
+		</Groups>
 
-	  <Buttons>
-		  <Button guid="guidDockDAPnextPackageCmdSet" id="ShowDockDAPwindowCommand" priority="0x0100" type="Button">
-			  <Parent guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" />
-			  <Strings>
-				  <ButtonText>Open DockDAP</ButtonText>
-			  </Strings>
-		  </Button>
-	  </Buttons>
-  </Commands>
+		<Buttons>
+			<Button guid="guidDockDAPnextPackageCmdSet" id="ShowDockDAPwindowCommand" priority="0x0100" type="Button">
+				<Parent guid="guidDockDAPnextPackageCmdSet" id="ToolsMenuGrouping" />
+				<Icon guid="ImageCatalogGuid" id="StatusInformation" />
+				<CommandFlag>IconIsMoniker</CommandFlag>
+				<Strings>
+					<ButtonText>Open DockDAP</ButtonText>
+				</Strings>
+			</Button>
+		</Buttons>
+	</Commands>
 
-  <Symbols>
-	  <GuidSymbol name="guidDockDAPnextPackage" value="{df11ccf0-1b9d-4bf7-b2b4-22768646962c}" />
+	<Symbols>
+		<GuidSymbol name="guidDockDAPnextPackage" value="{df11ccf0-1b9d-4bf7-b2b4-22768646962c}" />
 
-	  <GuidSymbol name="guidDockDAPnextPackageCmdSet" value="{CF2F943D-81C9-4C79-830A-30224C0AF594}">
-		  <IDSymbol name="ShowDockDAPwindowCommand" value="0x0100"/>
-		  <IDSymbol name="ToolsMenuGrouping" value="0x0101" />
-	  </GuidSymbol>
-  </Symbols> 
-
+		<GuidSymbol name="guidDockDAPnextPackageCmdSet" value="{CF2F943D-81C9-4C79-830A-30224C0AF594}">
+			<IDSymbol name="ToolsMenuGrouping" value="0x0101" />
+			<IDSymbol name="ShowDockDAPwindowCommand" value="0x0100"/>
+		</GuidSymbol>
+	</Symbols>
 
 </CommandTable>

@@ -25,7 +25,7 @@ namespace DockDAPnext
     /// </summary>
     internal sealed partial class PackageIds
     {
-        public const int ShowDockDAPwindowCommand = 0x0100;
         public const int ToolsMenuGrouping = 0x0101;
+        public const int ShowDockDAPwindowCommand = 0x0100;
     }
 }

@@ -1,11 +1,15 @@
-﻿namespace DockDAPnext.Command
+﻿using MessageBox = System.Windows.MessageBox;
+
+namespace DockDAPnext.Command
 {
-    [Command(PackageIds.ShowDockDAPwindowCommand)]
+    [Command(PackageGuids.guidDockDAPnextPackageCmdSetString,PackageIds.ShowDockDAPwindowCommand)]
     internal sealed class DockDAPcommand : BaseCommand<DockDAPcommand>
     {
         protected override async Task ExecuteAsync(OleMenuCmdEventArgs e)
         {
-            await DockDAPwindow.ShowAsync();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            MessageBox.Show("DockDap Buttons is ready");
+            //await DockDAPwindow.ShowAsync();
         }
     }
 }
