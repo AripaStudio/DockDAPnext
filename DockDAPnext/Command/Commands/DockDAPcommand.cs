@@ -1,6 +1,4 @@
-﻿using MessageBox = System.Windows.MessageBox;
-
-namespace DockDAPnext.Command
+﻿namespace DockDAPnext.Command
 {
     [Command(PackageGuids.guidDockDAPnextPackageCmdSetString,PackageIds.ShowDockDAPwindowCommand)]
     internal sealed class DockDAPcommand : BaseCommand<DockDAPcommand>
@@ -8,8 +6,8 @@ namespace DockDAPnext.Command
         protected override async Task ExecuteAsync(OleMenuCmdEventArgs e)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            MessageBox.Show("DockDap Buttons is ready");
-            //await DockDAPwindow.ShowAsync();
+            // Open the DockDAP tool window (no debug dialogs)
+            await DockDAPwindow.ShowAsync();
         }
     }
 }

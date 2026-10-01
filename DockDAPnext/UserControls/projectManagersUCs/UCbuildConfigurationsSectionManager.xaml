@@ -1,14 +1,22 @@
 ﻿<UserControl x:Class="DockDAPnext.UserControls.projectManagersUCs.UCbuildConfigurationsSectionManager"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:vs="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DockDAPnext.UserControls.projectManagersUCs"
              xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="#1E1E1E" Margin="10">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DockDAPnext;component/Themes/UIStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -16,48 +24,45 @@
 
         <TextBlock Grid.Row="0"
                    Text="Advanced Build Configurations"
-                   Foreground="#007ACC"
+                   Foreground="{DynamicResource {x:Static vs:VsBrushes.AccentMediumKey}}"
                    FontSize="18"
                    FontWeight="Bold"
                    Margin="0,0,0,15" />
 
         <Border Grid.Row="1"
-                Background="#252526"
-                BorderBrush="#3F3F46"
+                Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}"
+                BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="15">
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,6,0,-6">
 
-                <TabControl BorderBrush="#3F3F46"
+                <TabControl BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
                             BorderThickness="1"
-                            Background="#2D2D30"
-                            Foreground="#F1F1F1"
+                           
+                           
                             Padding="5">
-                    <TabItem Header="Config Name" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="Config Name">
                         <StackPanel Margin="10">
                             <TextBlock Text="Current Build Configuration Name (e.g., debug, release)" 
-                   Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,0,5"/>
                             <Grid Margin="0,5,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0"
-                     Background="#3F3F46"
-                     Foreground="#F1F1F1"
-                     CaretBrush="#F1F1F1"
-                     BorderBrush="#555555"
+                    
+                    
+                    
+                    
                      Padding="5"
                      VerticalContentAlignment="Center"
                      Text="{Binding vmProjectDubManager.txtNameBuildConfig, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Button Grid.Column="1"
+                                <Button Style="{StaticResource PrimaryButton}" Grid.Column="1"
                     Margin="5,0,0,0"
                     Padding="10,0"
-                    Background="#007ACC"
-                    Foreground="White"
-                    FontWeight="Bold"
                     Command="{Binding vmProjectDubManager.ButtonCommand_ApplayNameBuildConfigurations}">
                                     <StackPanel Orientation="Horizontal">
                                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Edit}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -66,29 +71,26 @@
                                 </Button>
                             </Grid>
                             <TextBlock Text="* This name identifies the configuration in DUB." 
-                   Foreground="#555555" FontSize="11" FontStyle="Italic"/>
+                   Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}" FontSize="11" FontStyle="Italic"/>
 
                             <TextBlock Text="Add New Configuration Name" 
-                                       Foreground="#CCCCCC" Margin="0,15,0,5"/>
+                                       Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,15,0,5"/>
                             <Grid Margin="0,5,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0"
-                                         Background="#3F3F46"
-                                         Foreground="#F1F1F1"
-                                         CaretBrush="#F1F1F1"
-                                         BorderBrush="#555555"
+                                        
+                                        
+                                        
+                                        
                                          Padding="5"
                                          VerticalContentAlignment="Center"
                                          Text="{Binding vmProjectDubManager.txtAddNewConfigurationsName, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Button Grid.Column="1"
+                                <Button Style="{StaticResource SuccessButton}" Grid.Column="1"
                                         Margin="5,0,0,0"
                                         Padding="10,0"
-                                        Background="#28A745" 
-                                        Foreground="White"
-                                        FontWeight="Bold"
                                         Command="{Binding vmProjectDubManager.ButtonCommand_AddNewNameBuildConfiguarations}">
                                     <StackPanel Orientation="Horizontal">
                                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -98,20 +100,18 @@
                             </Grid>
 
                             <TextBlock Text="Existing Configurations:" 
-                                       Foreground="#CCCCCC" Margin="0,10,0,5"/>
+                                       Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,10,0,5"/>
                             <ListBox Height="120"
-                                     Background="#2D2D30"
-                                     Foreground="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      ItemsSource="{Binding vmProjectDubManager.NameConfigListCollection}" 
                                      SelectedItem="{Binding vmProjectDubManager.SelectedDeletedNameConfigOfList}">
                             </ListBox>
 
-                            <Button Margin="0,5,0,0"
+                            <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     HorizontalAlignment="Right"
-                                    Background="#D11A2A"
-                                    Foreground="White"
                                     Padding="10,2"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_DeleteNameConfigurations}">
                                 <StackPanel Orientation="Horizontal">
@@ -122,25 +122,22 @@
                         </StackPanel>
                     </TabItem>
 
-                    <TabItem Header="Build Options" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="Build Options">
                         <StackPanel Margin="10">
-                            <TextBlock Text="Select Build Option to Add" Foreground="#CCCCCC" Margin="0,0,0,5"/>
-                            <ComboBox Margin="0,5,0,10"
-                              Background="#3F3F46"
-                              Foreground="#F1F1F1"
-                              BorderBrush="#555555"
+                            <TextBlock Text="Select Build Option to Add" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,0,5"/>
+                            <ComboBox Style="{DynamicResource {x:Static vs:VsResourceKeys.ThemedDialogComboBoxStyleKey}}" Margin="0,5,0,10"
+                             
+                             
+                             
                               Padding="5"
                               ItemsSource="{Binding vmProjectDubManager.BuildPOptionTypesComboBox}"
                               SelectedItem="{Binding vmProjectDubManager.SelectedBuildOptionComboBox }"
                               >
                             </ComboBox>
 
-                            <Button Margin="0,0,0,5"
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                 Width="160"
                                 HorizontalAlignment="Center"
-                                Background="#007ACC"
-                                Foreground="White"
-                                FontWeight="Bold"
                                 Command="{Binding vmProjectDubManager.ButtonCommand_AddBuildOption}"
                                 >
                                 <StackPanel Orientation="Horizontal">
@@ -150,20 +147,17 @@
                             </Button>
 
                             <ListBox Height="100"
-                                 Background="#2D2D30"
-                                 Foreground="#F1F1F1"
-                                 BorderBrush="#555555"
+                                
+                                
+                                
                                  Margin="0,5,0,5" 
                                  ItemsSource="{Binding vmProjectDubManager.BuildOptionsList}"
                                  SelectedItem="{Binding vmProjectDubManager.SelectedBuildOption }"
                                  />
 
-                            <Button Margin="0,5,0,0"
+                            <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                 Width="160"
                                 HorizontalAlignment="Center"
-                                Background="#D0313C"
-                                Foreground="White"
-                                FontWeight="Bold"
                                 Command="{Binding vmProjectDubManager.ButtonCommand_RemoveBuildOption}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -172,23 +166,20 @@
                             </Button>
                         </StackPanel>
                     </TabItem>
-                    <TabItem Header="D Flags" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="D Flags">
                         <StackPanel Margin="10">
-                            <TextBlock Text="Add D Compiler Flag (e.g., -unittest)" Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                            <TextBlock Text="Add D Compiler Flag (e.g., -unittest)" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,0,5"/>
                             <TextBox Margin="0,5,0,10"
-                                     Background="#3F3F46"
-                                     Foreground="#F1F1F1"
-                                     CaretBrush="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
+                                    
                                      Padding="5"
                                      Text="{Binding vmProjectDubManager.txtAddDFlag, UpdateSourceTrigger=PropertyChanged}" />
 
-                            <Button Margin="0,0,0,5"
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#007ACC"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_DFlag_Add}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -197,19 +188,16 @@
                             </Button>
 
                             <ListBox Height="100"
-                                     Background="#2D2D30"
-                                     Foreground="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
                                      Margin="0,0,0,5"
                                      ItemsSource="{Binding vmProjectDubManager.DFlagsList}" 
                                      SelectedItem="{Binding vmProjectDubManager.SelectedDFlag}" />
 
-                            <Button Margin="0,5,0,0"
+                            <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#D0313C"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_DFlag_Remove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -219,23 +207,20 @@
                         </StackPanel>
                     </TabItem>
 
-                    <TabItem Header="L Flags" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="L Flags">
                         <StackPanel Margin="10">
-                            <TextBlock Text="Add Linker Flag (e.g., -L/usr/lib)" Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                            <TextBlock Text="Add Linker Flag (e.g., -L/usr/lib)" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,0,5"/>
                             <TextBox Margin="0,5,0,10"
-                                     Background="#3F3F46"
-                                     Foreground="#F1F1F1"
-                                     CaretBrush="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
+                                    
                                      Padding="5"
                                      Text="{Binding vmProjectDubManager.txtAddLFlag, UpdateSourceTrigger=PropertyChanged}" />
 
-                            <Button Margin="0,0,0,5"
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#007ACC"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_LFlag_Add}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -244,19 +229,16 @@
                             </Button>
 
                             <ListBox Height="100"
-                                     Background="#2D2D30"
-                                     Foreground="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
                                      Margin="0,0,0,5"
                                      ItemsSource="{Binding vmProjectDubManager.LFlagsList}" 
                                      SelectedItem="{Binding vmProjectDubManager.SelectedLFlag}" />
 
-                            <Button Margin="0,5,0,0"
+                            <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#D0313C"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_LFlag_Remove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -266,23 +248,20 @@
                         </StackPanel>
                     </TabItem>
 
-                    <TabItem Header="Versions" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="Versions">
                         <StackPanel Margin="10">
-                            <TextBlock Text="Add Version Identifier (e.g., Have_MyFeature)" Foreground="#CCCCCC" Margin="0,0,0,5"/>
+                            <TextBlock Text="Add Version Identifier (e.g., Have_MyFeature)" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,0,5"/>
                             <TextBox Margin="0,5,0,10"
-                                     Background="#3F3F46"
-                                     Foreground="#F1F1F1"
-                                     CaretBrush="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
+                                    
                                      Padding="5"
                                      Text="{Binding vmProjectDubManager.txtAddVersion, UpdateSourceTrigger=PropertyChanged}" />
 
-                            <Button Margin="0,0,0,5"
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#007ACC"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_Version_Add}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -291,19 +270,16 @@
                             </Button>
 
                             <ListBox Height="100"
-                                     Background="#2D2D30"
-                                     Foreground="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
                                      Margin="0,0,0,5"
                                      ItemsSource="{Binding vmProjectDubManager.VersionsList}" 
                                      SelectedItem="{Binding vmProjectDubManager.SelectedVersion}" />
 
-                            <Button Margin="0,5,0,0"
+                            <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Background="#D0313C"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_Version_Remove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -313,11 +289,11 @@
                         </StackPanel>
                     </TabItem>
 
-                    <TabItem Header="Other Configs" Background="#3F3F46" Foreground="#DCDCDC">
+                    <TabItem Header="Other Configs">
                         <StackPanel Margin="10">
 
                             <TextBlock Text="Define Custom Configuration" 
-                                       Foreground="#DCDCDC" 
+                                       Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" 
                                        FontWeight="SemiBold" 
                                        Margin="0,0,0,10"
                                        FontSize="13"/>
@@ -332,34 +308,31 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,0,5,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,0,5,5"/>
                                 <TextBox Grid.Row="0" Grid.Column="1"
                                          ToolTip="Enter configuration name (e.g., debug-windows)"
-                                         Background="#3F3F46"
-                                         Foreground="#F1F1F1"
-                                         CaretBrush="#F1F1F1"
-                                         BorderBrush="#555555"
+                                        
+                                        
+                                        
+                                        
                                          Padding="5"
                                          Margin="0,0,0,5"
                                          Text="{Binding vmProjectDubManager.txtOtherConfigName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,5,5,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,5,5,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="1"
                                          ToolTip="Enter a description or custom property value."
-                                         Background="#3F3F46"
-                                         Foreground="#F1F1F1"
-                                         CaretBrush="#F1F1F1"
-                                         BorderBrush="#555555"
+                                        
+                                        
+                                        
+                                        
                                          Padding="5"
                                          Margin="0,5,0,0"
                                          Text="{Binding vmProjectDubManager.txtOtherConfigValue, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
 
-                            <Button Margin="0,10,0,15"
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,10,0,15"
                                     Width="180"
-                                    Background="#007ACC"
-                                    Foreground="White"
-                                    FontWeight="Bold"
                                     HorizontalAlignment="Center"
                                     Command="{Binding vmProjectDubManager.ButtonCommand_OtherConfig_Add}">
                                 <StackPanel Orientation="Horizontal">
@@ -369,9 +342,9 @@
                             </Button>
 
                             <ListBox Height="100"
-                                     Background="#2D2D30"
-                                     Foreground="#F1F1F1"
-                                     BorderBrush="#555555"
+                                    
+                                    
+                                    
                                      SelectionMode="Single"
                                      Margin="0,0,0,10"
                                      ItemsSource="{Binding vmProjectDubManager.OtherConfigsList}" 
@@ -384,19 +357,16 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" FontWeight="Bold" Foreground="#DCDCDC" Margin="0,0,5,0" Text="{Binding Item1}"/>
-                                            <TextBlock Grid.Column="1" Text=": " Foreground="#CCCCCC" Margin="0,0,5,0"/>
-                                            <TextBlock Grid.Column="2" Foreground="#DCDCDC" TextWrapping="Wrap" Text="{Binding Item2}"/>
+                                            <TextBlock Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,5,0" Text="{Binding Item1}"/>
+                                            <TextBlock Grid.Column="1" Text=": " Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,5,0"/>
+                                            <TextBlock Grid.Column="2" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" TextWrapping="Wrap" Text="{Binding Item2}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
 
-                            <Button 
+                            <Button Style="{StaticResource DangerButton}" 
                                 Width="200"
-                                Background="#D0313C" 
-                                Foreground="White"
-                                FontWeight="Bold"
                                 HorizontalAlignment="Center"
                                 Command="{Binding vmProjectDubManager.ButtonCommand_OtherConfig_Remove}">
                                 <Button.Content>

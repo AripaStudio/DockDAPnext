@@ -4,17 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DockDAPnext.UserControls"
+             xmlns:vs="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
              xmlns:ucprjoect="clr-namespace:DockDAPnext.UserControls.projectManagersUCs"
              mc:Ignorable="d" 
             >
     <Grid>
-        <TabControl Background="#252526" BorderThickness="0">
-            <TabControl.Resources>
-                <Style TargetType="TabItem">
-                    <Setter Property="Padding" Value="10,5"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                </Style>
-            </TabControl.Resources>
+        <TabControl>
 
             <TabItem Header="Project Config">
                 <ucprjoect:UCprojectSectionManager Margin="5"/>

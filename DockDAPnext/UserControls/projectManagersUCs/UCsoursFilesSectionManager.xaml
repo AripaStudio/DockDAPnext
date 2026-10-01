@@ -1,14 +1,22 @@
 ﻿<UserControl x:Class="DockDAPnext.UserControls.projectManagersUCs.UCsoursFilesSectionManager"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:vs="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DockDAPnext.UserControls.projectManagersUCs"
              xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="#1E1E1E" Margin="10">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DockDAPnext;component/Themes/UIStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -16,14 +24,14 @@
 
         <TextBlock Grid.Row="0"
                    Text="Source File Management"
-                   Foreground="#007ACC"
+                   Foreground="{DynamicResource {x:Static vs:VsBrushes.AccentMediumKey}}"
                    FontSize="18"
                    FontWeight="Bold"
                    Margin="0,0,0,15" />
 
         <Border Grid.Row="1"
-                Background="#252526"
-                BorderBrush="#3F3F46"
+                Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}"
+                BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="15">
@@ -31,7 +39,7 @@
             <StackPanel>
 
                 <TextBlock Text="Add Source Path" 
-                           Foreground="#DCDCDC" 
+                           Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" 
                            FontWeight="SemiBold" 
                            Margin="0,0,0,10"
                            FontSize="13"/>
@@ -43,20 +51,17 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBox Grid.Column="0"
-                             Background="#3F3F46"
-                             Foreground="#F1F1F1"
-                             CaretBrush="#F1F1F1"
-                             BorderBrush="#555555"
+                            
+                            
+                            
+                            
                              Padding="5"
                              Margin="0,0,10,0"
                              ToolTip="Enter the relative path for the source file or directory."
                              Text="{Binding vmProjectDubManager.txtAddSourcePath, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <Button Grid.Column="1"
+                    <Button Style="{StaticResource PrimaryButton}" Grid.Column="1"
                             Width="120"
-                            Background="#007ACC"
-                            Foreground="White"
-                            FontWeight="Bold"
                             Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileAddPath}">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
@@ -67,29 +72,26 @@
                     </Button>
                 </Grid>
 
-                <Separator Background="#3F3F46" Margin="0,15"/>
+                <Separator Margin="0,15"/>
 
                 <TextBlock Text="Current Source Paths" 
-                           Foreground="#DCDCDC" 
+                           Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" 
                            FontWeight="SemiBold" 
                            Margin="0,0,0,5"
                            FontSize="13"/>
 
                 <ListBox 
                     Height="150"
-                    Background="#2D2D30"
-                    Foreground="#F1F1F1"
-                    BorderBrush="#555555"
+                   
+                   
+                   
                     SelectionMode="Single"
                     Margin="0,0,0,10"
                     ItemsSource="{Binding vmProjectDubManager.sourceFilePathListCollection}" 
                     SelectedItem="{Binding vmProjectDubManager.selectedSourcePathListRemove}" />
 
-                <Button 
+                <Button Style="{StaticResource DangerButton}" 
                     Width="220"
-                    Background="#D0313C" 
-                    Foreground="White"
-                    FontWeight="Bold"
                     HorizontalAlignment="Center"
                     ToolTip="Removes the currently selected path from the source list."
                     Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileRemovePath}">

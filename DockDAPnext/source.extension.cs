@@ -10,12 +10,7 @@ namespace DockDAPnext
     {
         public const string Id = "DockDAPnext.9893225d-605a-42c9-8c81-09cd89f8b038";
         public const string Name = "DockDAPnext";
-        public const string Description = @"A Dub Mangaer Extensions by Aripa Pars Studio (my name is ""Khashayar Mobasheri(abolfazl))
-Method:
-Go to the Tools section and click on the OpenDubDAP button. 
-A window will open next to your solution, from where you can manage it. 
-I would appreciate it if you could let us know if you encounter any issues. 
-Thank you, AripaPars Studio.";
+        public const string Description = "A Dub Manager Extensions by Aripa Pars Studio (Khashayar Mobasheri - abolfazl). Method: Go to the Tools section and click on the OpenDubDAP button. A window will open next to your solution, from where you can manage it. Feedback is appreciated. Thank you, AripaPars Studio.";
         public const string Language = "en-US";
         public const string Version = "1.0.0";
         public const string Author = "AripaStudio";
