@@ -29,6 +29,16 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _buildStatusText, value);
         }
 
+        private bool _runAfterBuild;
+
+        // Bound by the "Run after build" checkbox: when on, a successful build of an
+        // executable launches the program without asking; when off, the user is asked.
+        public bool RunAfterBuild
+        {
+            get => _runAfterBuild;
+            set => this.RaiseAndSetIfChanged(ref _runAfterBuild, value);
+        }
+
         private IdubManagerService apiDockManager;
 
 
@@ -60,6 +70,39 @@ namespace DockDAPnext.ViewModels
                 + " defaultNull=" + (ButtonCommand_buildDefault == null));
         }
 
+        // After a successful build the user either opted in via the checkbox or gets
+        // asked; only an executable targetType has a program worth launching.
+        private async Task OfferRunAsync(string label, DubBuildResult result)
+        {
+            var targetType = (CurrentConfig?.TargetType ?? "executable").Trim().ToLowerInvariant();
+            if (targetType != "executable")
+            {
+                ShowInfo($"{label} build finished successfully (exit code 0).\n\nThe target is a library ('{CurrentConfig.TargetType}'), so there is no program to run.");
+                return;
+            }
+
+            var shouldRun = RunAfterBuild
+                || AskYesNo($"{label} build finished successfully (exit code 0).\n\nRun the program now?");
+
+            if (!shouldRun)
+            {
+                ShowInfo($"{label} build finished successfully (exit code 0).");
+                return;
+            }
+
+            var run = await apiDockManager.RunBuiltExecutableAP(result.WorkingDirectory);
+
+            if (run.Started)
+            {
+                BuildStatusText = $"{label} build finished (exit code 0). Running: {run.ExecutablePath}";
+            }
+            else
+            {
+                BuildStatusText = $"{label} build finished, but the program was not run: {run.FailureReason}";
+                ShowWarning(run.FailureReason);
+            }
+        }
+
         private async Task RunBuildAsync(string label, Func<Task<DubBuildResult>> build)
         {
             if (!EnsureConfigLoaded())
@@ -79,7 +122,7 @@ namespace DockDAPnext.ViewModels
             if (result.Success)
             {
                 BuildStatusText = $"{label} build finished (exit code 0).";
-                ShowInfo($"{label} build finished successfully (exit code 0).");
+                await OfferRunAsync(label, result);
             }
             else if (!result.Started)
             {

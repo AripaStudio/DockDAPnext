@@ -83,10 +83,29 @@ namespace DockDAPnext.Service
 
         public string FailureReason { get; set; }
 
+        // The folder dub ran in; also where its .exe output lands unless dub.json says otherwise.
+        public string WorkingDirectory { get; set; }
+
         public bool Success => Started && ExitCode == 0;
 
         public static DubBuildResult NotStarted(string reason) =>
             new DubBuildResult { Started = false, FailureReason = reason };
+    }
+
+    // Outcome of launching the built .exe (run-after-build feature).
+    public class DubRunResult
+    {
+        public bool Started { get; set; }
+
+        public string ExecutablePath { get; set; }
+
+        public string FailureReason { get; set; }
+
+        public static DubRunResult Ok(string exePath) =>
+            new DubRunResult { Started = true, ExecutablePath = exePath };
+
+        public static DubRunResult Fail(string reason) =>
+            new DubRunResult { Started = false, FailureReason = reason };
     }
 
     public class DubManagerAP
@@ -641,7 +660,62 @@ namespace DockDAPnext.Service
                 return DubBuildResult.NotStarted($"Could not resolve the folder that holds {dubFilePath}.");
             }
 
-            return await DubCommandAP.BuildDubAsync(workingDirectory, arguments);
+            var result = await DubCommandAP.BuildDubAsync(workingDirectory, arguments);
+            result.WorkingDirectory = workingDirectory;
+            return result;
+        }
+
+        // Run-after-build: launch <targetName>.exe next to dub.json. Only an executable
+        // targetType (dub's default) can run; libraries/static libs are refused.
+        public async Task<DubRunResult> RunBuiltExecutableAP(string workingDirectory)
+        {
+            if (string.IsNullOrEmpty(workingDirectory) || !Directory.Exists(workingDirectory))
+            {
+                return DubRunResult.Fail("The build folder is unknown; build first, then run.");
+            }
+
+            // Prefer the on-disk dub.json; it wins over a possibly stale in-memory config.
+            var config = dubManagerAP.ReadDubFileAP(System.IO.Path.Combine(workingDirectory, "dub.json"))
+                ?? CurrentDubFileConfigAP.CurrentDubConfigAp;
+
+            if (config == null)
+            {
+                return DubRunResult.Fail("dub.json was not loaded; create or load it first.");
+            }
+
+            var targetType = (config.TargetType ?? "executable").Trim().ToLowerInvariant();
+            if (targetType != "executable")
+            {
+                return DubRunResult.Fail($"targetType is '{config.TargetType}', not 'executable': a library produces no program to run.");
+            }
+
+            var targetName = string.IsNullOrWhiteSpace(config.TargetName) ? config.Name : config.TargetName;
+            if (string.IsNullOrWhiteSpace(targetName))
+            {
+                return DubRunResult.Fail("dub.json declares neither 'targetName' nor 'name', so the output file cannot be predicted.");
+            }
+
+            var exePath = System.IO.Path.Combine(workingDirectory, targetName + ".exe");
+            if (!File.Exists(exePath))
+            {
+                return DubRunResult.Fail($"The program was not found at {exePath}. Build the project first.");
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = exePath,
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false
+                });
+
+                return DubRunResult.Ok(exePath);
+            }
+            catch (Exception e)
+            {
+                return DubRunResult.Fail($"Could not start {exePath}: {e.Message}");
+            }
         }
 
         public async Task OpenDubFileAP()

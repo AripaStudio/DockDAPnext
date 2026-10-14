@@ -47,6 +47,13 @@ namespace DockDAPnext.ViewModels
 
         protected static void ShowInfo(string message) => ShowMessage(message, MessageBoxIcon.Information);
 
+        protected static bool AskYesNo(string message)
+        {
+            DiagLog.Log("ASK[YesNo]: " + message);
+            var answer = MessageBox.Show(message, "DockDAP", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            return answer == System.Windows.Forms.DialogResult.Yes;
+        }
+
         protected static void ShowWarning(string message) => ShowMessage(message, MessageBoxIcon.Warning);
 
         private static void ShowMessage(string message, MessageBoxIcon icon)

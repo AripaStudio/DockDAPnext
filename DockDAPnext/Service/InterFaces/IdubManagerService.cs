@@ -16,6 +16,8 @@ namespace DockDAPnext.Service.InterFaces
 
         public Task<DubBuildResult> BuildReleaseDubAP();
 
+        public Task<DubRunResult> RunBuiltExecutableAP(string workingDirectory);
+
         public  Task OpenDubFileAP();
 
         public Task<bool> SaveFileAP(DubConfigAP dubConfigAp);

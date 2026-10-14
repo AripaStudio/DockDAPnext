@@ -35,6 +35,11 @@
 
                 <TextBlock Style="{StaticResource SubTitle}" Text="Quick Build Configurations" />
 
+                <CheckBox IsChecked="{Binding vmBuildDubFile.RunAfterBuild}"
+                          Margin="0,0,0,8"
+                          Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                          Content="Run the program automatically after a successful build (executable targets only)" />
+
                 <Border Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}"
                         BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
                         BorderThickness="1"
