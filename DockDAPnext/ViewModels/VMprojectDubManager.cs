@@ -5,11 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls.Primitives;
 using DockDAPnext.Service.InterFaces;
-using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace DockDAPnext.ViewModels
 {
@@ -29,7 +25,7 @@ namespace DockDAPnext.ViewModels
             set { this.RaiseAndSetIfChanged(ref _txtAddNewAuthors, value); }
         }
 
-        private ObservableCollection<string> _authorsList;
+        private ObservableCollection<string> _authorsList = new ObservableCollection<string>();
 
         public ObservableCollection<string> AuthorsList
         {
@@ -56,7 +52,10 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _txtName_Project, value);
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Name = _txtName_Project;
+                if (CurrentConfig != null)
+                {
+                    CurrentConfig.Name = _txtName_Project;
+                }
             }
         }
 
@@ -69,7 +68,10 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _txtDescription_Project, value);
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Description = _txtDescription_Project;
+                if (CurrentConfig != null)
+                {
+                    CurrentConfig.Description = _txtDescription_Project;
+                }
             }
         }
 
@@ -84,7 +86,10 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _txtLicense_project, value);
-                CurrentDubFileConfigAP.CurrentDubConfigAp.License = _txtLicense_project;
+                if (CurrentConfig != null)
+                {
+                    CurrentConfig.License = _txtLicense_project;
+                }
             }
         }
 
@@ -97,7 +102,10 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _txtTargetName_project, value);
-                CurrentDubFileConfigAP.CurrentDubConfigAp.TargetName = _txtTargetName_project;
+                if (CurrentConfig != null)
+                {
+                    CurrentConfig.TargetName = _txtTargetName_project;
+                }
             }
         }
 
@@ -120,7 +128,10 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _selectedTargetType, value);
-                CurrentDubFileConfigAP.CurrentDubConfigAp.TargetType = _selectedTargetType.ToString();
+                if (CurrentConfig != null)
+                {
+                    CurrentConfig.TargetType = _selectedTargetType.ToString();
+                }
             }
         }
 
@@ -158,7 +169,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtAddDependencyValue, value);
         }
 
-        private ObservableCollection<string> _dependenciesListCollection;
+        private ObservableCollection<string> _dependenciesListCollection = new ObservableCollection<string>();
 
         public ObservableCollection<string> dependenciesListCollection
         {
@@ -189,7 +200,7 @@ namespace DockDAPnext.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _txtNameBuildConfig, value);
-                SetCurrentConfigIndex();
+                UpdateCurrentConfigIndex();
             }
         }
 
@@ -208,7 +219,7 @@ namespace DockDAPnext.ViewModels
         }
 
 
-        private ObservableCollection<string> _nameConfigListCollection;
+        private ObservableCollection<string> _nameConfigListCollection = new ObservableCollection<string>();
 
         public ObservableCollection<string> NameConfigListCollection
         {
@@ -227,9 +238,6 @@ namespace DockDAPnext.ViewModels
 
 
 
-
-
-
         //----- D Flags -----
         public ReactiveCommand<Unit, Unit> ButtonCommand_DFlag_Add { get; }
         public ReactiveCommand<Unit, Unit> ButtonCommand_DFlag_Remove { get; }
@@ -241,7 +249,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtAddDFlag, value);
         }
 
-        private ObservableCollection<string> _dFlagsList;
+        private ObservableCollection<string> _dFlagsList = new ObservableCollection<string>();
         public ObservableCollection<string> DFlagsList
         {
             get => _dFlagsList;
@@ -266,7 +274,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtAddLFlag, value);
         }
 
-        private ObservableCollection<string> _lFlagsList;
+        private ObservableCollection<string> _lFlagsList = new ObservableCollection<string>();
         public ObservableCollection<string> LFlagsList
         {
             get => _lFlagsList;
@@ -291,7 +299,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtAddVersion, value);
         }
 
-        private ObservableCollection<string> _versionsList;
+        private ObservableCollection<string> _versionsList = new ObservableCollection<string>();
         public ObservableCollection<string> VersionsList
         {
             get => _versionsList;
@@ -323,7 +331,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtOtherConfigValue, value);
         }
 
-        private ObservableCollection<Tuple<string, string>> _otherConfigsList;
+        private ObservableCollection<Tuple<string, string>> _otherConfigsList = new ObservableCollection<Tuple<string, string>>();
         public ObservableCollection<Tuple<string, string>> OtherConfigsList
         {
             get => _otherConfigsList;
@@ -338,14 +346,12 @@ namespace DockDAPnext.ViewModels
         }
 
         // ----- Build Options -----
-        private ObservableCollection<BuildOptionTypes> _buildOptionsList;
+        private ObservableCollection<BuildOptionTypes> _buildOptionsList = new ObservableCollection<BuildOptionTypes>();
         public ObservableCollection<BuildOptionTypes> BuildOptionsList
         {
             get => _buildOptionsList;
             set => this.RaiseAndSetIfChanged(ref _buildOptionsList, value);
         }
-
-        private List<BuildOptionTypes> _buildOptionTypesComboBox;
 
         public List<BuildOptionTypes> BuildPOptionTypesComboBox { get; } = new List<BuildOptionTypes>
         {
@@ -382,8 +388,9 @@ namespace DockDAPnext.ViewModels
 
         #endregion
         #region sourceFile
-        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileAddPath;
-        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileRemovePath;
+        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileAddPath { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_SourceFileRemovePath { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_SyncFromDproj { get; }
 
 
         private string _txtAddSourcePath;
@@ -394,7 +401,7 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _txtAddSourcePath, value);
         }
 
-        private ObservableCollection<string> _sourceFilePathListCollection;
+        private ObservableCollection<string> _sourceFilePathListCollection = new ObservableCollection<string>();
         public ObservableCollection<string> sourceFilePathListCollection
         {
             get => _sourceFilePathListCollection;
@@ -411,22 +418,136 @@ namespace DockDAPnext.ViewModels
         #endregion
 
 
-        private void SetCurrentConfigIndex()
-        {
-            var index = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
-                .FindIndex(s => s.Name == txtNameBuildConfig);
+        private int CurrentBuildConfigID = 0;
 
-            if (index == -1)
+        // Silent: this runs on every keystroke of the build-config name box, so a MessageBox
+        // here would interrupt typing; failures are reported by the buttons instead.
+        private void UpdateCurrentConfigIndex()
+        {
+            var configurations = CurrentConfig?.BuildConfigurations;
+            if (configurations == null)
             {
-                MessageBox.Show("Please first write the name of the list (BuildConfig) you are working on.");
-                CurrentBuildConfigID = 0;
                 return;
             }
 
-            CurrentBuildConfigID = index;
+            var index = configurations.FindIndex(s => s.Name == txtNameBuildConfig);
+            if (index >= 0)
+            {
+                CurrentBuildConfigID = index;
+            }
         }
 
-        private int CurrentBuildConfigID = 0;
+        private bool TryGetCurrentBuildConfiguration(out BuildConfiguration configuration)
+        {
+            configuration = null;
+
+            if (!EnsureConfigLoaded())
+            {
+                return false;
+            }
+
+            var configurations = CurrentConfig.BuildConfigurations;
+            if (configurations == null || configurations.Count == 0)
+            {
+                ShowWarning("This file has no build configuration; create one in the Build Configs section first.");
+                return false;
+            }
+
+            UpdateCurrentConfigIndex();
+
+            if (CurrentBuildConfigID < 0 || CurrentBuildConfigID >= configurations.Count)
+            {
+                CurrentBuildConfigID = 0;
+            }
+
+            configuration = configurations[CurrentBuildConfigID];
+            return true;
+        }
+
+        // Brings the UI in sync with a freshly created or loaded dub.json, and repairs
+        // collections that the JSON may have left null.
+        public void LoadFromConfig(DubConfigAP config)
+        {
+            if (config == null)
+            {
+                return;
+            }
+
+            Normalize(config);
+
+            txtName_Project = config.Name;
+            txtDescription_Project = config.Description;
+            txtLicense_project = config.License;
+            txtTargetName_project = config.TargetName;
+
+            if (Enum.TryParse(config.TargetType, out TargetTypeEnum targetType))
+            {
+                SelectedTargetType = targetType;
+            }
+
+            AuthorsList = new ObservableCollection<string>(config.Authors);
+            dependenciesListCollection = new ObservableCollection<string>(
+                config.Dependencies.Select(d => $"{d.Key}: {d.Value}"));
+            sourceFilePathListCollection = new ObservableCollection<string>(config.SourceFiles);
+            NameConfigListCollection = new ObservableCollection<string>(
+                config.BuildConfigurations.Select(c => c.Name));
+
+            CurrentBuildConfigID = 0;
+            LoadCurrentBuildConfigurationLists();
+        }
+
+        private void LoadCurrentBuildConfigurationLists()
+        {
+            var configuration = CurrentConfig?.BuildConfigurations?.ElementAtOrDefault(CurrentBuildConfigID);
+
+            DFlagsList = configuration == null
+                ? new ObservableCollection<string>()
+                : new ObservableCollection<string>(configuration.DFlags);
+            LFlagsList = configuration == null
+                ? new ObservableCollection<string>()
+                : new ObservableCollection<string>(configuration.LFlags);
+            VersionsList = configuration == null
+                ? new ObservableCollection<string>()
+                : new ObservableCollection<string>(configuration.Versions);
+            BuildOptionsList = configuration == null
+                ? new ObservableCollection<BuildOptionTypes>()
+                : new ObservableCollection<BuildOptionTypes>(configuration.BuildOptions);
+            OtherConfigsList = configuration == null
+                ? new ObservableCollection<Tuple<string, string>>()
+                : new ObservableCollection<Tuple<string, string>>(
+                    configuration.OtherDataBuildConfiguration.Select(d => new Tuple<string, string>(d.Key, d.Value?.ToString())));
+        }
+
+        private static void Normalize(DubConfigAP config)
+        {
+            config.Authors = config.Authors ?? new List<string>();
+            config.Dependencies = config.Dependencies ?? new Dictionary<string, string>();
+            config.SourceFiles = config.SourceFiles ?? new List<string>();
+            config.BuildConfigurations = config.BuildConfigurations ?? new List<BuildConfiguration>();
+            config.OtherData = config.OtherData ?? new Dictionary<string, object>();
+
+            foreach (var configuration in config.BuildConfigurations)
+            {
+                configuration.DFlags = configuration.DFlags ?? new List<string>();
+                configuration.LFlags = configuration.LFlags ?? new List<string>();
+                configuration.Versions = configuration.Versions ?? new List<string>();
+                configuration.BuildOptions = configuration.BuildOptions ?? new List<BuildOptionTypes>();
+                configuration.OtherDataBuildConfiguration = configuration.OtherDataBuildConfiguration ?? new Dictionary<string, object>();
+                configuration.Name = configuration.Name ?? string.Empty;
+            }
+        }
+
+        // Applies a successful source sync to the shared config and refreshes the list UI.
+        public void ApplySyncResult(DprojSyncResult result)
+        {
+            if (result == null || !result.Success || result.Config == null)
+            {
+                return;
+            }
+
+            CurrentDubFileConfigAP.CurrentDubConfigAp = result.Config;
+            sourceFilePathListCollection = new ObservableCollection<string>(result.Config.SourceFiles);
+        }
 
         private IdubManagerService dubManager;
         public VMprojectDubManager(IdubManagerService dubManagerService)
@@ -435,230 +556,371 @@ namespace DockDAPnext.ViewModels
 
 
             //name Config - build configurations
-            ButtonCommand_ApplayNameBuildConfigurations = ReactiveCommand.Create( () =>
+            ButtonCommand_ApplayNameBuildConfigurations = Guard(ReactiveCommand.Create(() =>
             {
-                SetCurrentConfigIndex();
-                if (NameConfigListCollection.Any(s => s != txtNameBuildConfig))
+                if (!EnsureConfigLoaded() || string.IsNullOrWhiteSpace(txtNameBuildConfig))
                 {
-                    NameConfigListCollection.Add(txtNameBuildConfig);
-                    CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Name =
-                        txtNameBuildConfig;
-                }
-                
-            });
-
-            ButtonCommand_DeleteNameConfigurations = ReactiveCommand.Create( () =>
-            {
-                if (string.IsNullOrWhiteSpace(SelectedDeletedNameConfigOfList))
-                {
-                    MessageBox.Show("No configuration name selected to delete");
                     return;
                 }
-                var selectedId = CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations
+
+                var configurations = CurrentConfig.BuildConfigurations;
+                if (configurations.Count == 0)
+                {
+                    ShowWarning("This file has no build configuration; add one first.");
+                    return;
+                }
+
+                UpdateCurrentConfigIndex();
+                configurations[CurrentBuildConfigID].Name = txtNameBuildConfig;
+                NameConfigListCollection = new ObservableCollection<string>(configurations.Select(c => c.Name));
+            }));
+
+            ButtonCommand_DeleteNameConfigurations = Guard(ReactiveCommand.Create(() =>
+            {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(SelectedDeletedNameConfigOfList))
+                {
+                    ShowWarning("Select a name from the list before removing it.");
+                    return;
+                }
+
+                var selectedId = CurrentConfig.BuildConfigurations
                     .FindIndex(s => s.Name == SelectedDeletedNameConfigOfList);
                 if (selectedId == -1)
                 {
-                    MessageBox.Show("Configuration name not found");
+                    ShowWarning("The selected name was not found in dub.json.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations.RemoveAt(selectedId);
+
+                CurrentConfig.BuildConfigurations.RemoveAt(selectedId);
                 NameConfigListCollection.Remove(SelectedDeletedNameConfigOfList);
-            });
+                CurrentBuildConfigID = 0;
+                LoadCurrentBuildConfigurationLists();
+            }));
 
 
-            ButtonCommand_AddNewNameBuildConfiguarations = ReactiveCommand.Create( () =>
+            ButtonCommand_AddNewNameBuildConfiguarations = Guard(ReactiveCommand.Create(() =>
             {
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Name =
-                    txtAddNewConfigurationsName;
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(txtAddNewConfigurationsName))
+                {
+                    ShowWarning("Build configuration name is empty.");
+                    return;
+                }
+
+                var configurations = CurrentConfig.BuildConfigurations;
+                if (configurations.Any(s => s.Name == txtAddNewConfigurationsName))
+                {
+                    ShowWarning("This name has already been added.");
+                    return;
+                }
+
+                configurations.Add(new BuildConfiguration { Name = txtAddNewConfigurationsName });
                 NameConfigListCollection.Add(txtAddNewConfigurationsName);
-            });
+                CurrentBuildConfigID = configurations.Count - 1;
+                LoadCurrentBuildConfigurationLists();
+            }));
 
             // Authors Section
-            ButtonCommand_Authors_Add = ReactiveCommand.Create(() =>
+            ButtonCommand_Authors_Add = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddNewAuthors))
                 {
-                    MessageBox.Show("The input is invalid or is empty");
+                    ShowWarning("Author name is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Add(txtAddNewAuthors);
-            });
 
-            ButtonCommand_Authors_Remove = ReactiveCommand.Create(() =>
+                CurrentConfig.Authors.Add(txtAddNewAuthors);
+                AuthorsList.Add(txtAddNewAuthors);
+            }));
+
+            ButtonCommand_Authors_Remove = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(SelectedAuthor))
                 {
-                    MessageBox.Show("No author selected to remove");
+                    ShowWarning("Select an author before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Authors.Remove(SelectedAuthor);
-            });
+
+                CurrentConfig.Authors.Remove(SelectedAuthor);
+                AuthorsList.Remove(SelectedAuthor);
+            }));
 
             // Dependencies
-            ButtonCommand_AddDependency = ReactiveCommand.Create(() =>
+            ButtonCommand_AddDependency = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddDependencyKey) || string.IsNullOrWhiteSpace(txtAddDependencyValue))
                 {
-                    MessageBox.Show("Dependency key or value is empty");
+                    ShowWarning("Dependency name or value is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies[txtAddDependencyKey] = txtAddDependencyValue;
-                dependenciesListCollection.Add($"{txtAddDependencyKey}: {txtAddDependencyValue}");
-            });
 
-            ButtonCommand_RemoveSelectedDependency = ReactiveCommand.Create(() =>
+                CurrentConfig.Dependencies[txtAddDependencyKey] = txtAddDependencyValue;
+                dependenciesListCollection.Add($"{txtAddDependencyKey}: {txtAddDependencyValue}");
+            }));
+
+            ButtonCommand_RemoveSelectedDependency = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(SelectedDependencyRemove))
                 {
-                    MessageBox.Show("No dependency selected to remove");
+                    ShowWarning("Select a dependency before removing it.");
                     return;
                 }
+
                 var keyToRemove = SelectedDependencyRemove.Split(':')[0].Trim();
-                CurrentDubFileConfigAP.CurrentDubConfigAp.Dependencies.Remove(keyToRemove);
+                CurrentConfig.Dependencies.Remove(keyToRemove);
                 dependenciesListCollection.Remove(SelectedDependencyRemove);
-            });
+            }));
 
             // D Flags
-            ButtonCommand_DFlag_Add = ReactiveCommand.Create(() =>
+            ButtonCommand_DFlag_Add = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddDFlag))
                 {
-                    MessageBox.Show("D Flag input is empty");
+                    ShowWarning("D flag value is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Add(txtAddDFlag);
-                DFlagsList.Add(txtAddDFlag);
-            });
 
-            ButtonCommand_DFlag_Remove = ReactiveCommand.Create(() =>
+                configuration.DFlags.Add(txtAddDFlag);
+                DFlagsList.Add(txtAddDFlag);
+            }));
+
+            ButtonCommand_DFlag_Remove = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(SelectedDFlag))
                 {
-                    MessageBox.Show("No D Flag selected to remove");
+                    ShowWarning("Select a D flag before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].DFlags.Remove(SelectedDFlag);
+
+                configuration.DFlags.Remove(SelectedDFlag);
                 DFlagsList.Remove(SelectedDFlag);
-            });
+            }));
 
             // L Flags
-            ButtonCommand_LFlag_Add = ReactiveCommand.Create(() =>
+            ButtonCommand_LFlag_Add = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddLFlag))
                 {
-                    MessageBox.Show("L Flag input is empty");
+                    ShowWarning("L flag value is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Add(txtAddLFlag);
-                LFlagsList.Add(txtAddLFlag);
-            });
 
-            ButtonCommand_LFlag_Remove = ReactiveCommand.Create(() =>
+                configuration.LFlags.Add(txtAddLFlag);
+                LFlagsList.Add(txtAddLFlag);
+            }));
+
+            ButtonCommand_LFlag_Remove = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(SelectedLFlag))
                 {
-                    MessageBox.Show("No L Flag selected to remove");
+                    ShowWarning("Select an L flag before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].LFlags.Remove(SelectedLFlag);
+
+                configuration.LFlags.Remove(SelectedLFlag);
                 LFlagsList.Remove(SelectedLFlag);
-            });
+            }));
 
             // Versions
-            ButtonCommand_Version_Add = ReactiveCommand.Create(() =>
+            ButtonCommand_Version_Add = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddVersion))
                 {
-                    MessageBox.Show("Version input is empty");
+                    ShowWarning("Version value is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Add(txtAddVersion);
-                VersionsList.Add(txtAddVersion);
-            });
 
-            ButtonCommand_Version_Remove = ReactiveCommand.Create(() =>
+                configuration.Versions.Add(txtAddVersion);
+                VersionsList.Add(txtAddVersion);
+            }));
+
+            ButtonCommand_Version_Remove = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(SelectedVersion))
                 {
-                    MessageBox.Show("No version selected to remove");
+                    ShowWarning("Select a version before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].Versions.Remove(SelectedVersion);
+
+                configuration.Versions.Remove(SelectedVersion);
                 VersionsList.Remove(SelectedVersion);
-            });
+            }));
 
             // Other Configs
-            ButtonCommand_OtherConfig_Add = ReactiveCommand.Create(() =>
+            ButtonCommand_OtherConfig_Add = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtOtherConfigName) || string.IsNullOrWhiteSpace(txtOtherConfigValue))
                 {
-                    MessageBox.Show("Config name or value is empty");
+                    ShowWarning("Configuration name or value is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
-                OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
-            });
 
-            ButtonCommand_OtherConfig_Remove = ReactiveCommand.Create(() =>
+                configuration.OtherDataBuildConfiguration[txtOtherConfigName] = txtOtherConfigValue;
+                OtherConfigsList.Add(new Tuple<string, string>(txtOtherConfigName, txtOtherConfigValue));
+            }));
+
+            ButtonCommand_OtherConfig_Remove = Guard(ReactiveCommand.Create(() =>
             {
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
+                {
+                    return;
+                }
+
                 if (SelectedOtherConfig == null || string.IsNullOrWhiteSpace(SelectedOtherConfig.Item1))
                 {
-                    MessageBox.Show("No configuration selected to remove");
+                    ShowWarning("Select a configuration before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
+
+                configuration.OtherDataBuildConfiguration.Remove(SelectedOtherConfig.Item1);
                 OtherConfigsList.Remove(SelectedOtherConfig);
-            });
+            }));
 
             // Source File
-            ButtonCommand_SourceFileAddPath = ReactiveCommand.Create(() =>
+            ButtonCommand_SourceFileAddPath = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtAddSourcePath))
                 {
-                    MessageBox.Show("Source file path is empty");
+                    ShowWarning("Source file path is empty.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Add(txtAddSourcePath);
-                sourceFilePathListCollection.Add(txtAddSourcePath);
-            });
 
-            ButtonCommand_SourceFileRemovePath = ReactiveCommand.Create(() =>
+                CurrentConfig.SourceFiles.Add(txtAddSourcePath);
+                sourceFilePathListCollection.Add(txtAddSourcePath);
+            }));
+
+            ButtonCommand_SourceFileRemovePath = Guard(ReactiveCommand.Create(() =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(selectedSourcePathListRemove))
                 {
-                    MessageBox.Show("No source file path selected to remove");
+                    ShowWarning("Select a path before removing it.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.SourceFiles.Remove(selectedSourcePathListRemove);
+
+                CurrentConfig.SourceFiles.Remove(selectedSourcePathListRemove);
                 sourceFilePathListCollection.Remove(selectedSourcePathListRemove);
-            });
+            }));
+
+            // Replace dub.json sourceFiles with the .d files listed in the active .visualdproj.
+            ButtonCommand_SyncFromDproj = Guard(ReactiveCommand.CreateFromTask(async () =>
+            {
+                var result = await dubManager.SyncSourceFilesFromDprojAP();
+                if (!result.Success)
+                {
+                    ShowWarning(result.ErrorMessage);
+                    return;
+                }
+
+                ApplySyncResult(result);
+                ShowInfo(result.Changed
+                    ? $"sourceFiles synced from the project file: +{result.Added} added, -{result.Removed} removed, {result.Total} total."
+                    : "sourceFiles already match the project file; dub.json was not changed.");
+            }));
 
             // Build Options
 
-            ButtonCommand_AddBuildOption = ReactiveCommand.Create(() =>
+            ButtonCommand_AddBuildOption = Guard(ReactiveCommand.Create(() =>
             {
-                if (BuildOptionsList.Contains(SelectedBuildOption))
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
                 {
-                    MessageBox.Show("This build option is already added.");
                     return;
                 }
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].BuildOptions.Add(SelectedBuildOptionComboBox);
-                
+
+                if (BuildOptionsList.Contains(SelectedBuildOptionComboBox))
+                {
+                    ShowWarning("This build option has already been added.");
+                    return;
+                }
+
+                configuration.BuildOptions.Add(SelectedBuildOptionComboBox);
+
                 BuildOptionsList.Add(SelectedBuildOptionComboBox);
-            });
+            }));
 
-            ButtonCommand_RemoveBuildOption = ReactiveCommand.Create(() =>
+            ButtonCommand_RemoveBuildOption = Guard(ReactiveCommand.Create(() =>
             {
-                if (SelectedBuildOption == null)
+                if (!TryGetCurrentBuildConfiguration(out var configuration))
                 {
-                    MessageBox.Show("No build option selected to remove.");
                     return;
                 }
 
-                CurrentDubFileConfigAP.CurrentDubConfigAp.BuildConfigurations[CurrentBuildConfigID].BuildOptions
-                    .Remove(SelectedBuildOption);
+                configuration.BuildOptions.Remove(SelectedBuildOption);
                 BuildOptionsList.Remove(SelectedBuildOption);
-            });
+            }));
         }
     }
 }

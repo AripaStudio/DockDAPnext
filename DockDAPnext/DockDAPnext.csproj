@@ -49,10 +49,14 @@
     <Compile Include="Command\Commands\DockDAPcommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DockDAPnextPackage.cs" />
+    <Compile Include="Service\AiServiceAP.cs" />
     <Compile Include="Service\AnimationManagerAP.cs" />
     <Compile Include="Service\BtnManagerAP.cs" />
     <Compile Include="Service\CurrentDubFileConfigAP.cs" />
     <Compile Include="Service\DubManagerAP.cs" />
+    <Compile Include="Service\DprojSyncAP.cs" />
+    <Compile Include="Service\DprojSyncTrigger.cs" />
+    <Compile Include="Service\InterFaces\IAiService.cs" />
     <Compile Include="Service\InterFaces\IdubManagerService.cs" />
     <Compile Include="source.extension.cs">
       <AutoGen>True</AutoGen>
@@ -88,6 +92,9 @@
     <Compile Include="UserControls\UCabouteMe.xaml.cs">
       <DependentUpon>UCabouteMe.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\UCaiAssistant.xaml.cs">
+      <DependentUpon>UCaiAssistant.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\UCbuildDubFile.xaml.cs">
       <DependentUpon>UCbuildDubFile.xaml</DependentUpon>
     </Compile>
@@ -99,6 +106,7 @@
     </Compile>
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\VMAiAssistant.cs" />
     <Compile Include="ViewModels\VMaboutMe.cs" />
     <Compile Include="ViewModels\VMbuildDubFile.cs" />
     <Compile Include="ViewModels\VMprojectDubManager.cs" />
@@ -136,6 +144,8 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -185,6 +195,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\UCabouteMe.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\UCaiAssistant.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

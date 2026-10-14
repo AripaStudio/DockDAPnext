@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,19 +10,16 @@ namespace DockDAPnext.Service.InterFaces
     {
         public Task<DubConfigAP> CreateOrLoadDubFileAP();
 
-        public Task BuildDubAP();
+        public Task<DubBuildResult> BuildDubAP();
 
-        public Task BuildDebugDubAP();
+        public Task<DubBuildResult> BuildDebugDubAP();
 
-        public Task BuildReleaseDubAP();
+        public Task<DubBuildResult> BuildReleaseDubAP();
 
         public  Task OpenDubFileAP();
 
-        public Task SaveFileAP(DubConfigAP dubConfigAp);
+        public Task<bool> SaveFileAP(DubConfigAP dubConfigAp);
 
-        public DubConfigAP AddToConfigAp(string name, string description, List<string> authors, string license,
-            string targetName, string TargetType, List<string> sourceFiles, Dictionary<string, string> dependencies,
-            List<BuildConfiguration> buildConfigurations
-            , Dictionary<string, object> otherData);
+        public Task<DprojSyncResult> SyncSourceFilesFromDprojAP();
     }
 }

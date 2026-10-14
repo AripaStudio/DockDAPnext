@@ -1,22 +1,33 @@
-﻿using System;
+using DockDAPnext.Service;
+using DockDAPnext.Service.InterFaces;
+using ReactiveUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
-using DockDAPnext.Service.InterFaces;
-using ReactiveUI;
+using System.Windows.Controls;
 
 namespace DockDAPnext.ViewModels
 {
     public class VMbuildDubFile : BaseViewModel
     {
-
         public ReactiveCommand<Unit, Unit> ButtonCommand_buildDebug { get; }
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_buildRelease { get; }
 
          public ReactiveCommand<Unit, Unit> ButtonCommand_buildDefault { get; }
+
+        private string _buildStatusText = "Idle. Pick a configuration below to run 'dub build'.";
+
+        // Bound by UCbuildDubFile: the visible run state the user asked for
+        // (running / succeeded / failed / not started).
+        public string BuildStatusText
+        {
+            get => _buildStatusText;
+            set => this.RaiseAndSetIfChanged(ref _buildStatusText, value);
+        }
 
         private IdubManagerService apiDockManager;
 
@@ -26,20 +37,60 @@ namespace DockDAPnext.ViewModels
 
             apiDockManager = dubManager;
 
-            ButtonCommand_buildDebug = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_buildDebug = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                await apiDockManager.BuildDebugDubAP();
-            });
+                DiagLog.Log("ENTER ButtonCommand_buildDebug");
+                await RunBuildAsync("Debug", apiDockManager.BuildDebugDubAP);
+            }));
 
-            ButtonCommand_buildDefault = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_buildDefault = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                await apiDockManager.BuildDubAP();
-            });
+                DiagLog.Log("ENTER ButtonCommand_buildDefault");
+                await RunBuildAsync("Default", apiDockManager.BuildDubAP);
+            }));
 
-            ButtonCommand_buildRelease = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_buildRelease = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                await apiDockManager.BuildReleaseDubAP();
-            });
+                DiagLog.Log("ENTER ButtonCommand_buildRelease");
+                await RunBuildAsync("Release", apiDockManager.BuildReleaseDubAP);
+            }));
+
+            DiagLog.Log("VMbuildDubFile: ctor done, debugNull=" + (ButtonCommand_buildDebug == null)
+                + " releaseNull=" + (ButtonCommand_buildRelease == null)
+                + " defaultNull=" + (ButtonCommand_buildDefault == null));
+        }
+
+        private async Task RunBuildAsync(string label, Func<Task<DubBuildResult>> build)
+        {
+            if (!EnsureConfigLoaded())
+            {
+                return;
+            }
+
+            BuildStatusText = $"{label} build running...";
+            var result = await build();
+
+            if (result == null)
+            {
+                BuildStatusText = $"{label} build: the service returned no result.";
+                return;
+            }
+
+            if (result.Success)
+            {
+                BuildStatusText = $"{label} build finished (exit code 0).";
+                ShowInfo($"{label} build finished successfully (exit code 0).");
+            }
+            else if (!result.Started)
+            {
+                BuildStatusText = $"{label} build not started: {result.FailureReason}";
+                ShowWarning($"{label} build was not started: {result.FailureReason}");
+            }
+            else
+            {
+                BuildStatusText = $"{label} build failed (exit code {result.ExitCode}) - see the 'Dub Manager' Output pane.";
+                ShowWarning($"{label} build failed with exit code {result.ExitCode}. Details are in the 'Dub Manager' Output pane.");
+            }
         }
     }
 }

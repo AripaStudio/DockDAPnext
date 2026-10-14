@@ -35,6 +35,18 @@
 
                 <TextBlock Style="{StaticResource SubTitle}" Text="Quick Build Configurations" />
 
+                <Border Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}"
+                        BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8"
+                        Margin="0,0,0,8">
+                    <TextBlock Text="{Binding vmBuildDubFile.BuildStatusText}"
+                               TextWrapping="Wrap"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" />
+                </Border>
+
                 <Grid Margin="0,5,0,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

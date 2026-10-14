@@ -4,9 +4,12 @@ global using System;
 global using Task = System.Threading.Tasks.Task;
 using System.IO;
 using System.Reflection;
+using System.Reactive.Concurrency;
 using System.Runtime.InteropServices;
 using System.Threading;
 using DockDAPnext.AppConfiguration;
+using DockDAPnext.Service;
+using ReactiveUI;
 
 namespace DockDAPnext
 {
@@ -14,7 +17,13 @@ namespace DockDAPnext
     [InstalledProductRegistration(Vsix.Name, Vsix.Description, Vsix.Version)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(PackageGuids.guidDockDAPnextPackageString)]
-    [ProvideToolWindow(typeof(DockDAPwindow)
+    // NOTE: the tool window type referenced here must be the ToolWindowPane
+    // (DockDAPwindow.Pane) - the same type exposed by DockDAPwindow.PaneType.
+    // Community.VisualStudio.Toolkit matches ProvideToolWindowAttribute.ToolType
+    // against BaseToolWindow<T>.PaneType; using typeof(DockDAPwindow) instead makes
+    // BaseToolWindow<DockDAPwindow>.Initialize() throw
+    // "requires a ProvideToolWindow attribute on the package".
+    [ProvideToolWindow(typeof(DockDAPwindow.Pane)
     ,Style = VsDockStyle.Tabbed
     , Window = "3AE79031-E1BC-11D0-8F78-00A0C9110057"
     , Orientation = ToolWindowOrientation.Right)]
@@ -37,17 +46,24 @@ namespace DockDAPnext
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            await base.InitializeAsync(cancellationToken, progress);
+            // ReactiveUI ships no WPF platform module in this extension, so its default "main
+            // thread" is the thread pool: every ReactiveCommand then reports CanExecute from a
+            // worker thread and WPF throws Dispatcher.VerifyAccess, killing devenv.exe.
+            RxSchedulers.MainThreadScheduler = DispatcherScheduler.Current;
 
+            await base.InitializeAsync(cancellationToken, progress);
 
             ServiceLocator.Build();
 
-            
-
             await this.RegisterCommandsAsync();
 
-            
+            // Registers every BaseToolWindow<T> in this assembly with the package.
+            // Without this, BaseToolWindow<DockDAPwindow> stays uninitialized and
+            // DockDAPwindow.ShowAsync() throws "has not been initialized".
+            this.RegisterToolWindows();
 
+            // Hooks VS project events so dub.json sourceFiles follows .dproj changes.
+            DprojSyncTrigger.Initialize();
         }
 
       

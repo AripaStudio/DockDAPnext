@@ -21,10 +21,15 @@ namespace DockDAPnext.ViewModels
         {
             apiDockManager = DockManager;
 
-            ButtonCommand_OpenDub = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_OpenDub = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
+                if (!EnsureConfigLoaded())
+                {
+                    return;
+                }
+
                 await apiDockManager.OpenDubFileAP();
-            });
+            }));
         }
 
 

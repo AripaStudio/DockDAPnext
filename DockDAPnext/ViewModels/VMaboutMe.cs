@@ -16,29 +16,30 @@ namespace DockDAPnext.ViewModels
     public class VMaboutMe : BaseViewModel
     {
         private const string Github_link = "https://github.com/AripaStudio/DockDAPnext";
-        private const string WebSite_link = "https://aripastudio.github.io/AripaStudio/";
+        private const string WebSite_link = "https://aripapars.top/";
         private const string Telegram_link = "https://t.me/AripaStudio";
 
-        private ReactiveCommand<Unit, Unit> ButtonCommand_GithubLink { get; }
-        private ReactiveCommand<Unit, Unit> ButtonCommand_TelegramLink { get; }
-        private ReactiveCommand<Unit, Unit> ButtonCommand_WebSiteLink { get; }
+        // Public: WPF binding silently ignores non-public members, so the About buttons did nothing.
+        public ReactiveCommand<Unit, Unit> ButtonCommand_GithubLink { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_TelegramLink { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommand_WebSiteLink { get; }
 
         public VMaboutMe()
         {
-            ButtonCommand_GithubLink = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_GithubLink = Guard(ReactiveCommand.Create(() =>
             {
                 BtnManagerAP.OpenLinkAP(Github_link);
-            });
+            }));
 
-            ButtonCommand_TelegramLink = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_TelegramLink = Guard(ReactiveCommand.Create(() =>
             {
                 BtnManagerAP.OpenLinkAP(Telegram_link);
-            });
+            }));
 
-            ButtonCommand_WebSiteLink = ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommand_WebSiteLink = Guard(ReactiveCommand.Create(() =>
             {
                 BtnManagerAP.OpenLinkAP(WebSite_link);
-            });
+            }));
         }
 
 
