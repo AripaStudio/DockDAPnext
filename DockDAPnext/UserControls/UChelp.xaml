@@ -1,0 +1,89 @@
+<UserControl x:Class="DockDAPnext.UserControls.UChelp"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vs="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DockDAPnext;component/Themes/UIStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Style="{StaticResource SectionTitle}"
+                   Text="Help" />
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}"
+                BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="15">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="What is DockDAPnext?" />
+                    <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="DockDAPnext is a companion extension for MSBuild and the Visual D toolset. It does not replace them - it adds dub on top of them." />
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="You still work inside Visual D" />
+                    <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="Most of your daily work stays in Visual D, because DockDAPnext is tied to it. Visual D gives you the project files, the editor support (IntelliSense, syntax highlighting), the code checks and the debugger. Nothing of that changes." />
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="What dub adds" />
+                    <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="dub is the package manager and build tool of the D language. Next to Visual D, this extension lets you use the power of dub: build your project with dub, manage the dub.json manifest (name, dependencies, build configurations, source files) and fetch packages from the dub registry - all without leaving Visual Studio." />
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="The tabs of this window" />
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- Project: edit every section of dub.json (project data, authors, build configurations, dependencies, source files)." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- Show Dub.json: open dub.json in the editor." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- Build With Dub: run dub build (debug, release or default) and optionally run the produced program." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- AI Assistant: an optional helper that can propose dub.json changes through your own AI endpoint (see the Help section inside that tab)." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- About Me: links to the studio, source code and support channel." />
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="First steps" />
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="1. Select your D project in the Solution Explorer." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="2. Click 'Create or load File' to create or load dub.json." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="3. Fill in the Project tab and save with 'Save File'." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="4. Build with the Build With Dub tab. The output appears in the 'Dub Manager' pane of the Output Window." />
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="Requirements" />
+                    <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="dub.exe must be installed on your machine (it ships with the D toolchain). The extension finds it through Visual D's install folder, your PATH, or the common install locations. If it cannot find dub, it tells you exactly what to install." />
+
+                    <TextBlock Style="{StaticResource SubTitle}" Text="Tips" />
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- 'Sync from .dproj' in the Source Files section copies the .d files declared by your Visual D project into dub.json." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- Every message box and status line tells you what happened; nothing is changed silently." />
+                        <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                   Text="- Feedback is welcome: the About Me tab has the GitHub and Telegram links." />
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

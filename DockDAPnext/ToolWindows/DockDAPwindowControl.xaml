@@ -60,6 +60,9 @@
                     <TabItem Header="AI Assistant">
                         <uc:UCaiAssistant/>
                     </TabItem>
+                    <TabItem Header="Help">
+                        <uc:UChelp/>
+                    </TabItem>
                     <TabItem Header="About Me">
                         <uc:UCabouteMe/>
                     </TabItem>

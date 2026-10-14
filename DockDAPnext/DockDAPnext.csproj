@@ -95,6 +95,9 @@
     <Compile Include="UserControls\UCaiAssistant.xaml.cs">
       <DependentUpon>UCaiAssistant.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\UChelp.xaml.cs">
+      <DependentUpon>UChelp.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\UCbuildDubFile.xaml.cs">
       <DependentUpon>UCbuildDubFile.xaml</DependentUpon>
     </Compile>
@@ -200,6 +203,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\UCaiAssistant.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\UChelp.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
