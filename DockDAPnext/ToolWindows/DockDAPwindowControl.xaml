@@ -57,6 +57,9 @@
                     <TabItem Header="Build With Dub">
                         <uc:UCbuildDubFile/>
                     </TabItem>
+                    <TabItem Header="AI Assistant">
+                        <uc:UCaiAssistant/>
+                    </TabItem>
                     <TabItem Header="About Me">
                         <uc:UCabouteMe/>
                     </TabItem>

@@ -25,6 +25,7 @@ namespace DockDAPnext.AppConfiguration
         public static IServiceCollection ConfigurationServices(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IdubManagerService, APIdockAP>();
+            serviceCollection.AddSingleton<IAiService, AiServiceAP>();
             serviceCollection.AddSingleton<BaseViewModel>(); 
             serviceCollection.AddSingleton<MainViewModel>();
 
@@ -32,6 +33,7 @@ namespace DockDAPnext.AppConfiguration
             serviceCollection.AddSingleton<VMbuildDubFile>();
             serviceCollection.AddSingleton<VMshowDubFile>();
             serviceCollection.AddSingleton<VMprojectDubManager>();
+            serviceCollection.AddSingleton<VMAiAssistant>();
 
             return serviceCollection;
 
