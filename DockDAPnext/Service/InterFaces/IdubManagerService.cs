@@ -10,6 +10,8 @@ namespace DockDAPnext.Service.InterFaces
     {
         public Task<DubConfigAP> CreateOrLoadDubFileAP();
 
+        public Task<string> GetDubFilePathAP();
+
         public Task<DubBuildResult> BuildDubAP();
 
         public Task<DubBuildResult> BuildDebugDubAP();

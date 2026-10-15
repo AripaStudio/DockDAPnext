@@ -627,6 +627,13 @@ namespace DockDAPnext.Service
             return dubManagerAP.CreateDubFileWithDefaultsAP(newFilePath);
         }
 
+        // Locates the on-disk dub.json (no creation): the AI tab merges a confirmed
+        // proposal straight into that file, so it must know exactly which file it is.
+        public Task<string> GetDubFilePathAP()
+        {
+            return dubManagerAP.FindDubFileAP();
+        }
+
         public Task<DubBuildResult> BuildDubAP()
         {
             return BuildWithDubAsync("build");
