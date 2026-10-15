@@ -2,6 +2,7 @@ using DockDAPnext.Service.InterFaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +26,9 @@ namespace DockDAPnext.Service
         // The fixed instruction prepended to every request. It is stored in ai.json on
         // purpose: the user must be able to read and edit exactly what gets sent.
         [JsonProperty("promptTemplate")] public string PromptTemplate { get; set; }
+
+        // The most recent requests the user sent (newest first), so one click can reuse one.
+        [JsonProperty("history")] public List<string> History { get; set; } = new List<string>();
     }
 
     // The AI never touches code: it may only propose a partial dub.json. This is the
@@ -294,21 +298,103 @@ namespace DockDAPnext.Service
             return proposal;
         }
 
-        private AiConfigAP LoadConfig()
+        // Newest-first list of previous requests; read raw from ai.json so it also works
+        // before any endpoint is configured (history is not secret and not endpoint-bound).
+        public IReadOnlyList<string> GetHistory()
         {
-            AiConfigAP config = null;
+            var history = ReadRawConfig()?.History;
+            return history ?? (IReadOnlyList<string>)new List<string>();
+        }
 
+        // Remembers a request at the top of the history (capped, no duplicates); writes
+        // the raw file so environment-variable overrides are never baked into ai.json.
+        public bool AddToHistory(string request)
+        {
+            var text = (request ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            try
+            {
+                var config = ReadRawConfig() ?? new AiConfigAP();
+                var history = config.History ?? new List<string>();
+                history.RemoveAll(item => string.Equals(item?.Trim(), text, StringComparison.Ordinal));
+                history.Insert(0, text);
+                while (history.Count > MaxHistory)
+                {
+                    history.RemoveAt(history.Count - 1);
+                }
+
+                config.History = history;
+                SaveRawConfig(config);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // The prompt template belongs to ai.json, not to the request box; this writes it
+        // back after the user viewed/edited it. An empty template is never accepted.
+        public bool SetPromptTemplate(string template)
+        {
+            var text = (template ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            try
+            {
+                var config = ReadRawConfig() ?? new AiConfigAP
+                {
+                    Endpoint = "https://api.openai.com/v1/chat/completions",
+                    ApiKey = string.Empty,
+                    Model = "gpt-4o-mini",
+                    ApiFormat = "chat"
+                };
+                config.PromptTemplate = text;
+                SaveRawConfig(config);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public const int MaxHistory = 10;
+
+        // File-level read/write of ai.json without the DOCKDAP_AI_* overrides, so saving
+        // never copies environment-only values into the file.
+        private AiConfigAP ReadRawConfig()
+        {
             try
             {
                 if (File.Exists(ConfigFilePath))
                 {
-                    config = JsonConvert.DeserializeObject<AiConfigAP>(File.ReadAllText(ConfigFilePath));
+                    return JsonConvert.DeserializeObject<AiConfigAP>(File.ReadAllText(ConfigFilePath));
                 }
             }
             catch (Exception)
             {
-                config = null;
+                return null;
             }
+            return null;
+        }
+
+        private void SaveRawConfig(AiConfigAP config)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigFilePath));
+            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(config, Formatting.Indented));
+        }
+
+        private AiConfigAP LoadConfig()
+        {
+            AiConfigAP config = ReadRawConfig();
 
             config = config ?? new AiConfigAP();
 

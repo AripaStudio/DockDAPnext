@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,11 +17,6 @@ namespace DockDAPnext.ViewModels
     // The AI never writes a file itself; it only proposes a partial dub.json fragment.
     public class VMAiAssistant : BaseViewModel
     {
-        // Ready-made, editable prompt the request box starts with, so the tab is never
-        // empty and the user sees what a request looks like before writing their own.
-        public const string DefaultExampleRequest =
-            "Give my dub.json a short description and an OSI-approved license if they are missing.";
-
         private readonly IAiService aiService;
         private readonly IdubManagerService dubManager;
         private readonly VMprojectDubManager vmProjectDubManager;
@@ -75,9 +71,39 @@ namespace DockDAPnext.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _hasProposal, value);
         }
 
+        // Newest-first history of previous requests, persisted in ai.json; the ComboBox
+        // fills the request box with one click so nothing has to be retyped.
+        private ObservableCollection<string> _requestHistory = new ObservableCollection<string>();
+
+        public ObservableCollection<string> RequestHistory
+        {
+            get => _requestHistory;
+            private set => this.RaiseAndSetIfChanged(ref _requestHistory, value);
+        }
+
+        private string _selectedHistoryItem;
+
+        public string SelectedHistoryItem
+        {
+            get => _selectedHistoryItem;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedHistoryItem, value);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    AiPromptText = value;
+                    // Reset so choosing the same entry twice works and the box keeps focus content.
+                    _selectedHistoryItem = null;
+                    this.RaisePropertyChanged(nameof(SelectedHistoryItem));
+                }
+            }
+        }
+
         public ReactiveCommand<Unit, Unit> ButtonCommand_AiSend { get; }
 
         public ReactiveCommand<string, Unit> ButtonCommand_AiExample { get; }
+
+        public ReactiveCommand<Unit, Unit> ButtonCommand_AiEditTemplate { get; }
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_AiApply { get; }
 
@@ -102,9 +128,10 @@ namespace DockDAPnext.ViewModels
                 ? "Ready."
                 : problem;
 
-            // The request box starts with a ready-made, editable prompt; the setter
-            // also refreshes the request preview shown below the box.
-            AiPromptText = DefaultExampleRequest;
+            // The request box starts empty on purpose: what the model always gets is the
+            // template (ai.json), reached through its own button; requests come from the
+            // history, the example chips, or the user's own words.
+            RequestHistory = new ObservableCollection<string>(aiService.GetHistory());
 
             DiagLog.Log("VMAiAssistant: commands being created, aiStatus=" + AiStatusText);
 
@@ -132,6 +159,12 @@ namespace DockDAPnext.ViewModels
                 // The preview must show exactly what this request sends.
                 var context = await BuildProjectContextAsync();
                 AiRequestPreview = aiService.BuildDubChangeRequest(AiPromptText, context);
+
+                // Remember it (newest first, capped) so the next request can reuse it.
+                if (aiService.AddToHistory(AiPromptText))
+                {
+                    RequestHistory = new ObservableCollection<string>(aiService.GetHistory());
+                }
 
                 ClearProposal();
                 AiStatusText = "Asking the AI...";
@@ -270,10 +303,90 @@ namespace DockDAPnext.ViewModels
                 BtnManagerAP.OpenLinkAP(aiService.ConfigFilePath);
             }));
 
+            // The template lives in ai.json, not in the request box; this button is the
+            // one place to view it and change it, and an empty result is refused.
+            ButtonCommand_AiEditTemplate = Guard(ReactiveCommand.Create(() =>
+            {
+                DiagLog.Log("ENTER ButtonCommand_AiEditTemplate");
+                var edited = ShowTemplateEditor(aiService.PromptTemplate, aiService.ConfigFilePath);
+                if (edited == null)
+                {
+                    return;
+                }
+
+                if (!aiService.SetPromptTemplate(edited))
+                {
+                    ShowWarning("The prompt template cannot be empty - the model needs it to answer correctly. " +
+                        "The previous template was kept.");
+                    return;
+                }
+
+                RefreshRequestPreview();
+                AiStatusText = "Prompt template saved to ai.json.";
+            }));
+
             DiagLog.Log("VMAiAssistant: ctor done, sendNull=" + (ButtonCommand_AiSend == null)
                 + " applyNull=" + (ButtonCommand_AiApply == null)
                 + " createNull=" + (ButtonCommand_AiCreateConfig == null)
                 + " openNull=" + (ButtonCommand_AiOpenConfig == null));
+        }
+
+        // A modal WinForms editor for the template, on its own STA thread so it works
+        // no matter which thread the command runs on; Cancel/close returns null.
+        private static string ShowTemplateEditor(string currentTemplate, string configPath)
+        {
+            string result = null;
+            var thread = new Thread(() =>
+            {
+                using (var form = new System.Windows.Forms.Form())
+                {
+                    var label = new System.Windows.Forms.Label
+                    {
+                        Text = "This exact text is sent with every request (stored in ai.json). It must not be empty.",
+                        Dock = System.Windows.Forms.DockStyle.Top,
+                        Height = 34,
+                        Padding = new System.Windows.Forms.Padding(8)
+                    };
+                    var textBox = new System.Windows.Forms.TextBox
+                    {
+                        Multiline = true,
+                        ScrollBars = System.Windows.Forms.ScrollBars.Vertical,
+                        Dock = System.Windows.Forms.DockStyle.Fill,
+                        Text = currentTemplate ?? string.Empty,
+                        Font = new System.Drawing.Font(System.Drawing.FontFamily.GenericMonospace, 9.5f)
+                    };
+                    var ok = new System.Windows.Forms.Button { Text = "Save", DialogResult = System.Windows.Forms.DialogResult.OK, Width = 100 };
+                    var cancel = new System.Windows.Forms.Button { Text = "Cancel", DialogResult = System.Windows.Forms.DialogResult.Cancel, Width = 100 };
+                    var panel = new System.Windows.Forms.FlowLayoutPanel
+                    {
+                        Dock = System.Windows.Forms.DockStyle.Bottom,
+                        Height = 42,
+                        FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft,
+                        Padding = new System.Windows.Forms.Padding(8)
+                    };
+                    panel.Controls.Add(cancel);
+                    panel.Controls.Add(ok);
+
+                    form.Text = "Prompt template  -  " + configPath;
+                    form.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+                    form.Width = 760;
+                    form.Height = 500;
+                    form.Controls.Add(textBox);
+                    form.Controls.Add(panel);
+                    form.Controls.Add(label);
+                    form.AcceptButton = ok;
+                    form.CancelButton = cancel;
+
+                    if (form.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        result = textBox.Text;
+                    }
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            return result;
         }
 
         // What will be sent: the visible template from ai.json + the current dub.json.

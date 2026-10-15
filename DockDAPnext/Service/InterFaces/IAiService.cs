@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -28,6 +29,15 @@ namespace DockDAPnext.Service.InterFaces
 
         // Writes a commented-by-example template config; never overwrites an existing one.
         bool CreateTemplateConfig();
+
+        // Most recent requests the user sent (newest first), from ai.json.
+        IReadOnlyList<string> GetHistory();
+
+        // Appends a request to the ai.json history (capped, no duplicates).
+        bool AddToHistory(string request);
+
+        // Writes the edited prompt template back to ai.json; empty template is refused.
+        bool SetPromptTemplate(string template);
 
         // The exact text that will be sent, so the UI can show it before/after sending.
         string BuildDubChangeRequest(string userRequest, string projectContext);
