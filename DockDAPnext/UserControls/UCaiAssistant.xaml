@@ -43,7 +43,7 @@
                     <TextBlock Style="{StaticResource HintText}"
                                Margin="0,5,0,10"
                                TextWrapping="Wrap"
-                               Text="Configuration lives in %APPDATA%\DockDAPnext\ai.json (endpoint, apiKey, model, apiFormat, promptTemplate). One request produces one JSON proposal that you confirm; only then is dub.json written. Local servers like Ollama or LM Studio work too and need no apiKey." />
+                               Text="Configuration lives in %APPDATA%\DockDAPnext\ai.json (endpoint, apiKey, model, apiFormat, promptTemplate) - it is created automatically with a pre-written prompt on first use. One request produces one JSON proposal that you confirm; only then is dub.json written. The request box starts with a ready-made example prompt. Local servers like Ollama or LM Studio work too and need no apiKey." />
 
                     <TextBlock Text="Your request"
                                Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
@@ -57,6 +57,26 @@
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
                              Text="{Binding vmAiAssistant.AiPromptText, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Text="Examples (click to fill the box):"
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                               FontWeight="SemiBold"
+                               Margin="0,8,0,4" />
+
+                    <WrapPanel>
+                        <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
+                                Content="Description + license"
+                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                CommandParameter="Give my dub.json a short description and an OSI-approved license if they are missing." />
+                        <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
+                                Content="Add package vibe-d"
+                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                CommandParameter="Add the package 'vibe-d' to my dub.json dependencies." />
+                        <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
+                                Content="Executable target"
+                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                CommandParameter="Make sure targetType is executable and targetName matches the project name." />
+                    </WrapPanel>
 
                     <TextBlock Text="Request preview (exactly what will be sent)"
                                Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
@@ -120,7 +140,7 @@
                     <TextBlock Style="{StaticResource HintText}"
                                Margin="0,5,0,0"
                                TextWrapping="Wrap"
-                               Text="This tab is deliberately not a chat: chatting is what the provider's own website or a coding agent is for. Here one request produces one proposal.&#x0a;&#x0a;How a request works:&#x0a;1. The prompt template from ai.json (the 'promptTemplate' field, editable by you) is sent together with the current dub.json and your request. The preview above shows the exact text.&#x0a;2. The model must answer with JSON only, in this shape: {&quot;summary&quot;: &quot;...&quot;, &quot;changes&quot;: { ...a PARTIAL dub.json with only the keys to change... }}.&#x0a;3. The extension parses and validates that JSON, shows the summary and the fragment, and nothing is written yet.&#x0a;4. 'Apply to dub.json' asks for confirmation, then the extension merges the fragment into dub.json itself. Keys you did not change are kept.&#x0a;&#x0a;ai.json fields:&#x0a;- endpoint: a base URL is enough (for example https://api.openai.com/v1 or http://localhost:11434 for Ollama); the right path is added automatically.&#x0a;- apiKey: required for remote providers; local servers (Ollama, LM Studio) need none.&#x0a;- model: the model name your provider expects.&#x0a;- apiFormat: &quot;chat&quot; (default, /v1/chat/completions, works everywhere) or &quot;responses&quot; (OpenAI's newer /v1/responses interface).&#x0a;- promptTemplate: the fixed instruction sent with every request.&#x0a;&#x0a;The AI only proposes dub.json changes; it never sees or edits your source code. File lists and checks stay with Visual D - use this tab only when you want dub's power for packages and builds." />
+                               Text="This tab is deliberately not a chat: chatting is what the provider's own website or a coding agent is for. Here one request produces one proposal.&#x0a;&#x0a;How a request works:&#x0a;1. The prompt template from ai.json (the 'promptTemplate' field, editable by you) is sent together with the current dub.json and your request. The preview above shows the exact text.&#x0a;2. The model must answer with JSON only, in this shape: {&quot;summary&quot;: &quot;...&quot;, &quot;changes&quot;: { ...a PARTIAL dub.json with only the keys to change... }}.&#x0a;3. The extension parses and validates that JSON, shows the summary and the fragment, and nothing is written yet.&#x0a;4. 'Apply to dub.json' shows a before/after for every changed key, asks for confirmation, saves a backup as dub.json.dockdap.bak, then merges the fragment itself. Keys you did not change are kept.&#x0a;&#x0a;ai.json fields:&#x0a;- endpoint: a base URL is enough (for example https://api.openai.com/v1 or http://localhost:11434 for Ollama); the right path is added automatically.&#x0a;- apiKey: required for remote providers; local servers (Ollama, LM Studio) need none.&#x0a;- model: the model name your provider expects.&#x0a;- apiFormat: &quot;chat&quot; (default, /v1/chat/completions, works everywhere) or &quot;responses&quot; (OpenAI's newer /v1/responses interface).&#x0a;- promptTemplate: the fixed instruction sent with every request.&#x0a;&#x0a;The AI only proposes dub.json changes; it never sees or edits your source code. File lists and checks stay with Visual D - use this tab only when you want dub's power for packages and builds." />
 
                 </StackPanel>
             </ScrollViewer>

@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,11 @@ namespace DockDAPnext.ViewModels
     // The AI never writes a file itself; it only proposes a partial dub.json fragment.
     public class VMAiAssistant : BaseViewModel
     {
+        // Ready-made, editable prompt the request box starts with, so the tab is never
+        // empty and the user sees what a request looks like before writing their own.
+        public const string DefaultExampleRequest =
+            "Give my dub.json a short description and an OSI-approved license if they are missing.";
+
         private readonly IAiService aiService;
         private readonly IdubManagerService dubManager;
         private readonly VMprojectDubManager vmProjectDubManager;
@@ -71,6 +77,8 @@ namespace DockDAPnext.ViewModels
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_AiSend { get; }
 
+        public ReactiveCommand<string, Unit> ButtonCommand_AiExample { get; }
+
         public ReactiveCommand<Unit, Unit> ButtonCommand_AiApply { get; }
 
         public ReactiveCommand<Unit, Unit> ButtonCommand_AiCreateConfig { get; }
@@ -86,11 +94,17 @@ namespace DockDAPnext.ViewModels
             this.dubManager = dubManager;
             this.vmProjectDubManager = vmProjectDubManager;
 
+            // First open: write the pre-written prompt template (ai.json) when it does
+            // not exist yet; CreateTemplateConfig never overwrites an existing file.
+            aiService.CreateTemplateConfig();
+
             AiStatusText = aiService.IsConfigured(out var problem)
                 ? "Ready."
                 : problem;
 
-            RefreshRequestPreview();
+            // The request box starts with a ready-made, editable prompt; the setter
+            // also refreshes the request preview shown below the box.
+            AiPromptText = DefaultExampleRequest;
 
             DiagLog.Log("VMAiAssistant: commands being created, aiStatus=" + AiStatusText);
 
@@ -160,17 +174,6 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                var confirmed = AskYesNo(
-                    "Apply this change to dub.json?" + Environment.NewLine + Environment.NewLine +
-                    proposal.Summary + Environment.NewLine + Environment.NewLine +
-                    proposal.Changes.ToString(Formatting.Indented));
-                if (!confirmed)
-                {
-                    AiStatusText = "Proposal discarded; dub.json was not changed.";
-                    ClearProposal();
-                    return;
-                }
-
                 var dubJsonPath = await dubManager.GetDubFilePathAP();
                 if (string.IsNullOrEmpty(dubJsonPath) || !System.IO.File.Exists(dubJsonPath))
                 {
@@ -178,11 +181,41 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
+                JObject root;
                 try
                 {
+                    root = JObject.Parse(System.IO.File.ReadAllText(dubJsonPath));
+                }
+                catch (Exception ex)
+                {
+                    ShowWarning("dub.json could not be read, so nothing was changed: " + ex.Message);
+                    return;
+                }
+
+                // The question must answer "exactly what changes?": one before/after line
+                // per changed top-level key instead of raw JSON the user has to diff mentally.
+                var diff = BuildApplyDiff(root, proposal.Changes);
+                var backupPath = dubJsonPath + ".dockdap.bak";
+
+                var confirmed = AskYesNo(
+                    "Apply this change to dub.json?" + Environment.NewLine + Environment.NewLine +
+                    proposal.Summary + Environment.NewLine + Environment.NewLine +
+                    diff + Environment.NewLine + Environment.NewLine +
+                    "A backup is saved first as " + System.IO.Path.GetFileName(backupPath) + ".");
+                if (!confirmed)
+                {
+                    AiStatusText = "Proposal discarded; dub.json was not changed.";
+                    ClearProposal();
+                    return;
+                }
+
+                try
+                {
+                    // Backup first: the user must always have a way back.
+                    System.IO.File.Copy(dubJsonPath, backupPath, true);
+
                     // Merge, do not overwrite: only the keys the AI proposed change,
                     // everything else in the user's dub.json survives untouched.
-                    var root = JObject.Parse(System.IO.File.ReadAllText(dubJsonPath));
                     root.Merge(proposal.Changes, new JsonMergeSettings
                     {
                         MergeArrayHandling = MergeArrayHandling.Replace
@@ -207,6 +240,16 @@ namespace DockDAPnext.ViewModels
                 AiStatusText = "Proposal applied: dub.json was updated.";
                 DiagLog.Log("APPLY done: " + dubJsonPath);
 }));
+
+            // Example chips: one click fills the request box with a ready-made prompt.
+            ButtonCommand_AiExample = Guard(ReactiveCommand.Create<string>(text =>
+            {
+                DiagLog.Log("ENTER ButtonCommand_AiExample");
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    AiPromptText = text;
+                }
+            }));
 
             ButtonCommand_AiCreateConfig = Guard(ReactiveCommand.Create(() =>
             {
@@ -263,6 +306,24 @@ namespace DockDAPnext.ViewModels
             return "dub.json path: " + path + Environment.NewLine + Environment.NewLine +
                 "Current dub.json content:" + Environment.NewLine + content;
         }
+
+        // One "before -> after" block per changed top-level key; long JSON values are
+        // truncated - this is the question asked, not a replacement for the full view.
+        private static string BuildApplyDiff(JObject current, JObject changes)
+        {
+            var lines = new List<string>();
+            foreach (var property in changes.Properties())
+            {
+                var before = current[property.Name];
+                lines.Add(property.Name + ":" + Environment.NewLine +
+                    "    before: " + (before == null ? "(not set)" : TruncateText(before.ToString(Formatting.None))) + Environment.NewLine +
+                    "    after:  " + TruncateText(property.Value.ToString(Formatting.None)));
+            }
+            return string.Join(Environment.NewLine, lines);
+        }
+
+        private static string TruncateText(string text) =>
+            string.IsNullOrEmpty(text) || text.Length <= 300 ? text : text.Substring(0, 300) + "...";
 
         private void ClearProposal()
         {
