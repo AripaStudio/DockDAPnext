@@ -7,36 +7,15 @@ using System.Xml.Linq;
 
 namespace DockDAPnext.Service
 {
-    public class DprojSyncResult
-    {
-        public bool Success { get; set; }
-
-        public string ErrorMessage { get; set; }
-
-        public bool Changed { get; set; }
-
-        public int Added { get; set; }
-
-        public int Removed { get; set; }
-
-        public int Total { get; set; }
-
-        public DubConfigAP Config { get; set; }
-
-        public string DubJsonPath { get; set; }
-
-        public string DprojPath { get; set; }
-    }
-
     // Keeps dub.json "sourceFiles" in sync with the compiled .d files declared by the
     // active VisualD project (.visualdproj). First step towards MSBuild-style sync.
-    public class DprojSyncAP
+    public class DprojSyncAp
     {
-        private readonly DubManagerAP dubManager;
+        private readonly DubManagerAp _dubManager;
 
-        public DprojSyncAP(DubManagerAP dubManager)
+        public DprojSyncAp(DubManagerAp dubManager)
         {
-            this.dubManager = dubManager;
+            this._dubManager = dubManager;
         }
 
         public async Task<DprojSyncResult> SyncAsync()
@@ -54,18 +33,26 @@ namespace DockDAPnext.Service
                 return Fail($"The active project is not a D project (.visualdproj / .dproj): {Path.GetFileName(dprojPath)}");
             }
 
-            var dubJsonPath = await dubManager.FindDubFileAP();
-            if (dubJsonPath == null)
+            var found = await _dubManager.FindDubFileApAsync();
+            if (!found.IsSuccess)
             {
                 return Fail("dub.json was not found in this solution. Create it first with 'Create or load File'.");
             }
 
+            var dubJsonPath = found.Value;
+
             // Reuse the in-memory config when the tool already loaded one so unsaved edits
             // survive; otherwise read dub.json from disk.
-            var config = CurrentDubFileConfigAP.CurrentDubConfigAp ?? dubManager.ReadDubFileAP(dubJsonPath);
+            var config = CurrentDubFileConfigAp.CurrentDubConfigAp;
             if (config == null)
             {
-                return Fail($"dub.json exists but could not be parsed: {dubJsonPath}");
+                var read = _dubManager.ReadDubFileAp(dubJsonPath);
+                if (!read.IsSuccess)
+                {
+                    return Fail(read.Message);
+                }
+
+                config = read.Value;
             }
 
             config.SourceFiles = config.SourceFiles ?? new List<string>();
@@ -104,7 +91,7 @@ namespace DockDAPnext.Service
             }
 
             config.SourceFiles = projectFiles;
-            if (!dubManager.SaveFileDubAP(dubJsonPath, config))
+            if (!_dubManager.SaveFileDubAp(dubJsonPath, config))
             {
                 result.Success = false;
                 result.ErrorMessage =
@@ -138,7 +125,7 @@ namespace DockDAPnext.Service
                     ? Path.GetFullPath(rawPath)
                     : Path.GetFullPath(Path.Combine(baseDirectory, rawPath.Replace('/', Path.DirectorySeparatorChar)));
 
-                files.Add(MakeRelative(baseDirectory, fullPath));
+                files.Add(PathHelperAp.MakeRelative(baseDirectory, fullPath));
             }
 
             return files;
@@ -158,7 +145,7 @@ namespace DockDAPnext.Service
                 var trimmed = path.Trim().Replace('\\', '/');
                 if (Path.IsPathRooted(path))
                 {
-                    return MakeRelative(baseDirectory, Path.GetFullPath(path));
+                    return PathHelperAp.MakeRelative(baseDirectory, Path.GetFullPath(path));
                 }
 
                 if (trimmed.StartsWith("./", StringComparison.Ordinal))
@@ -172,37 +159,6 @@ namespace DockDAPnext.Service
             {
                 // unusable path text: keep it verbatim so the diff stays honest
                 return path.Trim();
-            }
-        }
-
-        // net48 has no Path.GetRelativePath; Uri does the job and yields dub's '/' separators.
-        private static string MakeRelative(string fromDirectory, string toFile)
-        {
-            try
-            {
-                if (!string.Equals(Path.GetPathRoot(fromDirectory), Path.GetPathRoot(toFile),
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return toFile;
-                }
-
-                var directory = fromDirectory;
-                if (!directory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                {
-                    directory += Path.DirectorySeparatorChar;
-                }
-
-                var relative = new Uri(directory).MakeRelativeUri(new Uri(toFile));
-                if (relative.IsAbsoluteUri)
-                {
-                    return toFile;
-                }
-
-                return Uri.UnescapeDataString(relative.ToString());
-            }
-            catch (UriFormatException)
-            {
-                return toFile;
             }
         }
 

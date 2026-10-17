@@ -63,7 +63,7 @@
                             
                              Padding="5"
                              Margin="0,0,0,5"
-                             Text="{Binding vmProjectDubManager.txtAddDependencyKey}"
+                             Text="{Binding VmProjectDubManager.TxtAddDependencyKey}"
                              />
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,5,5,0"/>
@@ -75,14 +75,14 @@
                             
                              Padding="5"
                              Margin="0,5,0,0"
-                             Text="{Binding vmProjectDubManager.txtAddDependencyValue}"
+                             Text="{Binding VmProjectDubManager.TxtAddDependencyValue}"
                              />
                 </Grid>
 
                 <Button Style="{StaticResource PrimaryButton}" Margin="0,10,0,15"
                         Width="180"
                         HorizontalAlignment="Center"
-                        Command="{Binding vmProjectDubManager.ButtonCommand_AddDependency}"
+                        Command="{Binding VmProjectDubManager.ButtonCommandAddDependency}"
                         >
                     <StackPanel Orientation="Horizontal">
                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -105,8 +105,8 @@
                    
                     SelectionMode="Single"
                     Margin="0,0,0,10"
-                    ItemsSource="{Binding vmProjectDubManager.dependenciesListCollection}"
-                    SelectedItem="{Binding vmProjectDubManager.SelectedDependencyRemove}"
+                    ItemsSource="{Binding VmProjectDubManager.DependenciesListCollection}"
+                    SelectedItem="{Binding VmProjectDubManager.SelectedDependencyRemove}"
                     >
 
                     <ListBox.ItemTemplate>
@@ -129,7 +129,7 @@
                 <Button Style="{StaticResource DangerButton}" 
                     Width="220"
                     HorizontalAlignment="Center"
-                    Command="{Binding vmProjectDubManager.ButtonCommand_RemoveSelectedDependency}"
+                    Command="{Binding VmProjectDubManager.ButtonCommandRemoveSelectedDependency}"
                     >
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

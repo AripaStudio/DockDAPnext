@@ -20,6 +20,15 @@ namespace DockDAPnext.Service
     {
         private static bool _initialized;
 
+        // The RunAsync results are kept in fields so the loops stay tracked/joinable on
+        // package teardown instead of being discarded (VSSDK007).
+        private static JoinableTask _eventHookTask;
+        private static JoinableTask _syncLoopTask;
+
+        // The package's own factory (set from DockDaPnextPackage.InitializeAsync): package-owned
+        // JoinableTasks are tracked for shutdown, so fire-and-forget stays legal (VSSDK007).
+        private static JoinableTaskFactory _factory;
+
         // 0 = idle, 1 = sync running, 2 = another change arrived while running (re-run).
         private static int _state;
 
@@ -28,16 +37,15 @@ namespace DockDAPnext.Service
         private static EnvDTE.DocumentEvents _documentEvents;
         private static EnvDTE.ProjectItemsEvents _projectItemsEvents;
 
-        public static void Initialize()
+        public static void Initialize(JoinableTaskFactory factory)
         {
             if (_initialized)
             {
                 return;
-            }
+            }            _initialized = true;
+            _factory = factory ?? ThreadHelper.JoinableTaskFactory;
 
-            _initialized = true;
-
-            _ = ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            _eventHookTask = _factory.RunAsync(async () =>
             {
                 try
                 {
@@ -108,7 +116,7 @@ namespace DockDAPnext.Service
 
         private static void ScheduleSync(string reason)
         {
-            if (CurrentDubFileConfigAP.CurrentDubConfigAp == null)
+            if (CurrentDubFileConfigAp.CurrentDubConfigAp == null)
             {
                 return;
             }
@@ -121,7 +129,7 @@ namespace DockDAPnext.Service
                 return;
             }
 
-            _ = ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            _syncLoopTask = _factory.RunAsync(async () =>
             {
                 try
                 {
@@ -152,13 +160,13 @@ namespace DockDAPnext.Service
             await TaskScheduler.Default;
 
             var provider = ServiceLocator.Provider;
-            var dubService = provider?.GetService<IdubManagerService>();
+            var dubService = provider?.GetService<IDubManagerService>();
             if (dubService == null)
             {
                 return;
             }
 
-            var result = await dubService.SyncSourceFilesFromDprojAP();
+            var result = await dubService.SyncSourceFilesFromDprojApAsync();
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

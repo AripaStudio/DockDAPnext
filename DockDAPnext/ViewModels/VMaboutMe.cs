@@ -15,30 +15,30 @@ namespace DockDAPnext.ViewModels
     
     public class VMaboutMe : BaseViewModel
     {
-        private const string Github_link = "https://github.com/AripaStudio/DockDAPnext";
-        private const string WebSite_link = "https://aripapars.top/";
-        private const string Telegram_link = "https://t.me/AripaStudio";
+        private const string GithubLink = "https://github.com/AripaStudio/DockDAPnext";
+        private const string WebSiteLink = "https://aripapars.top/";
+        private const string TelegramLink = "https://t.me/AripaStudio";
 
         // Public: WPF binding silently ignores non-public members, so the About buttons did nothing.
-        public ReactiveCommand<Unit, Unit> ButtonCommand_GithubLink { get; }
-        public ReactiveCommand<Unit, Unit> ButtonCommand_TelegramLink { get; }
-        public ReactiveCommand<Unit, Unit> ButtonCommand_WebSiteLink { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandGithubLink { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandTelegramLink { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandWebSiteLink { get; }
 
         public VMaboutMe()
         {
-            ButtonCommand_GithubLink = Guard(ReactiveCommand.Create(() =>
+            ButtonCommandGithubLink = Guard(ReactiveCommand.Create(() =>
             {
-                BtnManagerAP.OpenLinkAP(Github_link);
+                BtnManagerAp.OpenLinkAp(GithubLink);
             }));
 
-            ButtonCommand_TelegramLink = Guard(ReactiveCommand.Create(() =>
+            ButtonCommandTelegramLink = Guard(ReactiveCommand.Create(() =>
             {
-                BtnManagerAP.OpenLinkAP(Telegram_link);
+                BtnManagerAp.OpenLinkAp(TelegramLink);
             }));
 
-            ButtonCommand_WebSiteLink = Guard(ReactiveCommand.Create(() =>
+            ButtonCommandWebSiteLink = Guard(ReactiveCommand.Create(() =>
             {
-                BtnManagerAP.OpenLinkAP(WebSite_link);
+                BtnManagerAp.OpenLinkAp(WebSiteLink);
             }));
         }
 

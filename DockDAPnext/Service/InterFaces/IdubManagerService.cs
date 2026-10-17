@@ -1,29 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DockDAPnext.Service.InterFaces
 {
-    public interface IdubManagerService
+    public interface IDubManagerService
     {
-        public Task<DubConfigAP> CreateOrLoadDubFileAP();
+        public Task<OperationResult<DubConfigAp>> CreateOrLoadDubFileApAsync();
 
-        public Task<string> GetDubFilePathAP();
+        public Task<OperationResult<string>> GetDubFilePathApAsync();
 
-        public Task<DubBuildResult> BuildDubAP();
+        public Task<DubBuildResult> BuildDubApAsync();
 
-        public Task<DubBuildResult> BuildDebugDubAP();
+        public Task<DubBuildResult> BuildDebugDubApAsync();
 
-        public Task<DubBuildResult> BuildReleaseDubAP();
+        public Task<DubBuildResult> BuildReleaseDubApAsync();
 
-        public Task<DubRunResult> RunBuiltExecutableAP(string workingDirectory);
+        public Task<DubRunResult> RunBuiltExecutableApAsync(string workingDirectory, string outputDirectory);
 
-        public  Task OpenDubFileAP();
+        public Task<OperationResult<string>> OpenDubFileApAsync();
 
-        public Task<bool> SaveFileAP(DubConfigAP dubConfigAp);
+        public Task<bool> SaveFileApAsync(DubConfigAp dubConfigAp);
 
-        public Task<DprojSyncResult> SyncSourceFilesFromDprojAP();
+        public Task<DprojSyncResult> SyncSourceFilesFromDprojApAsync();
     }
 }

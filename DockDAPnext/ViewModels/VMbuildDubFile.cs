@@ -13,11 +13,11 @@ namespace DockDAPnext.ViewModels
 {
     public class VMbuildDubFile : BaseViewModel
     {
-        public ReactiveCommand<Unit, Unit> ButtonCommand_buildDebug { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandBuildDebug { get; }
 
-        public ReactiveCommand<Unit, Unit> ButtonCommand_buildRelease { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandBuildRelease { get; }
 
-         public ReactiveCommand<Unit, Unit> ButtonCommand_buildDefault { get; }
+         public ReactiveCommand<Unit, Unit> ButtonCommandBuildDefault { get; }
 
         private string _buildStatusText = "Idle. Pick a configuration below to run 'dub build'.";
 
@@ -39,35 +39,29 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _runAfterBuild, value);
         }
 
-        private IdubManagerService apiDockManager;
+        private IDubManagerService _apiDockManager;
 
 
-        public VMbuildDubFile(IdubManagerService dubManager)
+        public VMbuildDubFile(IDubManagerService dubManager)
         {
 
-            apiDockManager = dubManager;
+            _apiDockManager = dubManager;
 
-            ButtonCommand_buildDebug = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandBuildDebug = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                DiagLog.Log("ENTER ButtonCommand_buildDebug");
-                await RunBuildAsync("Debug", apiDockManager.BuildDebugDubAP);
+                await RunBuildAsync("Debug", _apiDockManager.BuildDebugDubApAsync);
             }));
 
-            ButtonCommand_buildDefault = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandBuildDefault = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                DiagLog.Log("ENTER ButtonCommand_buildDefault");
-                await RunBuildAsync("Default", apiDockManager.BuildDubAP);
+                await RunBuildAsync("Default", _apiDockManager.BuildDubApAsync);
             }));
 
-            ButtonCommand_buildRelease = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandBuildRelease = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                DiagLog.Log("ENTER ButtonCommand_buildRelease");
-                await RunBuildAsync("Release", apiDockManager.BuildReleaseDubAP);
+                await RunBuildAsync("Release", _apiDockManager.BuildReleaseDubApAsync);
             }));
 
-            DiagLog.Log("VMbuildDubFile: ctor done, debugNull=" + (ButtonCommand_buildDebug == null)
-                + " releaseNull=" + (ButtonCommand_buildRelease == null)
-                + " defaultNull=" + (ButtonCommand_buildDefault == null));
         }
 
         // After a successful build the user either opted in via the checkbox or gets
@@ -90,7 +84,7 @@ namespace DockDAPnext.ViewModels
                 return;
             }
 
-            var run = await apiDockManager.RunBuiltExecutableAP(result.WorkingDirectory);
+            var run = await _apiDockManager.RunBuiltExecutableApAsync(result.WorkingDirectory, result.OutputDirectory);
 
             if (run.Started)
             {

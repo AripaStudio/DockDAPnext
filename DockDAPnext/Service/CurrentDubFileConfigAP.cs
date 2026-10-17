@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace DockDAPnext.Service
 {
-    public static class CurrentDubFileConfigAP
+    public static class CurrentDubFileConfigAp
     {
-        public static DubConfigAP CurrentDubConfigAp { get; set; }
+        public static DubConfigAp CurrentDubConfigAp { get; set; }
 
     }
 }

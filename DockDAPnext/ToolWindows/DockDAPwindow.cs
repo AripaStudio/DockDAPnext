@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace DockDAPnext
 {
-    public class DockDAPwindow : BaseToolWindow<DockDAPwindow>
+    public class DockDaPwindow : BaseToolWindow<DockDaPwindow>
     {
         public override string GetTitle(int toolWindowId) => "DockDAPwindow";
 
@@ -14,7 +14,7 @@ namespace DockDAPnext
 
         public override Task<FrameworkElement> CreateAsync(int toolWindowId, CancellationToken cancellationToken)
         {
-            return Task.FromResult<FrameworkElement>(new DockDAPwindowControl());
+            return Task.FromResult<FrameworkElement>(new DockDaPwindowControl());
         }
 
         [Guid("c3052301-4ed9-4edd-b49d-6cc3f9c173aa")]

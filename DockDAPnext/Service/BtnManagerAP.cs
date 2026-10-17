@@ -3,9 +3,9 @@ using System.Diagnostics;
 
 namespace DockDAPnext.Service
 {
-    public static class BtnManagerAP
+    public static class BtnManagerAp
     {
-        public static void OpenLinkAP(string url)
+        public static void OpenLinkAp(string url)
         {
             if (string.IsNullOrEmpty(url))
             {

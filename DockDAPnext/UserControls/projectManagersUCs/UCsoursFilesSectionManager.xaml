@@ -58,11 +58,11 @@
                              Padding="5"
                              Margin="0,0,10,0"
                              ToolTip="Enter the relative path for the source file or directory."
-                             Text="{Binding vmProjectDubManager.txtAddSourcePath, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding VmProjectDubManager.TxtAddSourcePath, UpdateSourceTrigger=PropertyChanged}" />
 
                     <Button Style="{StaticResource PrimaryButton}" Grid.Column="1"
                             Width="120"
-                            Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileAddPath}">
+                            Command="{Binding VmProjectDubManager.ButtonCommandSourceFileAddPath}">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
                                 <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -87,14 +87,14 @@
                    
                     SelectionMode="Single"
                     Margin="0,0,0,10"
-                    ItemsSource="{Binding vmProjectDubManager.sourceFilePathListCollection}" 
-                    SelectedItem="{Binding vmProjectDubManager.selectedSourcePathListRemove}" />
+                    ItemsSource="{Binding VmProjectDubManager.SourceFilePathListCollection}" 
+                    SelectedItem="{Binding VmProjectDubManager.SelectedSourcePathListRemove}" />
 
                 <Button Style="{StaticResource DangerButton}" 
                     Width="220"
                     HorizontalAlignment="Center"
                     ToolTip="Removes the currently selected path from the source list."
-                    Command="{Binding vmProjectDubManager.ButtonCommand_SourceFileRemovePath}">
+                    Command="{Binding VmProjectDubManager.ButtonCommandSourceFileRemovePath}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -108,7 +108,7 @@
                     HorizontalAlignment="Center"
                     Margin="0,10,0,0"
                     ToolTip="Replaces sourceFiles in dub.json with the .d files declared by the active .visualdproj project."
-                    Command="{Binding vmProjectDubManager.ButtonCommand_SyncFromDproj}">
+                    Command="{Binding VmProjectDubManager.ButtonCommandSyncFromDproj}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Refresh}" Width="16" Height="16" Margin="0,0,5,0"/>

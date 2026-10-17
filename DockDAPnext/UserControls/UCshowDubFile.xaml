@@ -45,7 +45,7 @@
                     Width="180"
                     Height="35"
                     Margin="5,10"
-                    Command="{Binding vmShowDubFile.ButtonCommand_OpenDub}">
+                    Command="{Binding VmShowDubFile.ButtonCommandOpenDub}">
 
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

@@ -1,119 +1,20 @@
-﻿using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using DockDAPnext.Service.InterFaces;
-using OutputWindowPane = Community.VisualStudio.Toolkit.OutputWindowPane;
 using Project = Community.VisualStudio.Toolkit.Project;
-using Windows = Community.VisualStudio.Toolkit.Windows;
 
 namespace DockDAPnext.Service
 {
-    public class DubConfigAP
-    {
-        [JsonProperty("name")] public string Name { get; set; }
-
-        [JsonProperty("description")] public string Description { get; set; }
-
-        [JsonProperty("authors")] public List<string> Authors { get; set; } = new List<string>();
-
-        [JsonProperty("license")] public string License { get; set; }
-
-        [JsonProperty("targetName")] public string TargetName { get; set; }
-
-        [JsonProperty("targetType")] public string TargetType { get; set; }
-
-        [JsonProperty("sourceFiles")] public List<string> SourceFiles { get; set; } = new List<string>();
-
-        [JsonProperty("dependencies")]
-        public Dictionary<string, string> Dependencies { get; set; } = new Dictionary<string, string>();
-
-        [JsonProperty("buildConfigurations")]
-        public List<BuildConfiguration> BuildConfigurations { get; set; } = new List<BuildConfiguration>();
-
-        [JsonExtensionData]
-        public Dictionary<string, object> OtherData { get; set; } = new Dictionary<string, object>();
-    }
-
-    public class BuildConfiguration
-    {
-        [JsonProperty("name")] public string Name { get; set; }
-
-        [JsonProperty("dflags")] public List<string> DFlags { get; set; } = new List<string>();
-
-        [JsonProperty("lflags")] public List<string> LFlags { get; set; } = new List<string>();
-
-        [JsonProperty("versions")] public List<string> Versions { get; set; } = new List<string>();
-
-        [JsonProperty("buildOptions")] public List<BuildOptionTypes> BuildOptions { get; set; } = new List<BuildOptionTypes>();
-
-        [JsonExtensionData]
-        public Dictionary<string, object> OtherDataBuildConfiguration { get; set; } = new Dictionary<string, object>();
-
-    }
-
-    [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-    public enum BuildOptionTypes
-    {
-        debugMode,
-        releaseMode,
-        coverage,
-        unoptimized,
-        inline,
-        noBoundsCheck,
-        debugInfo,
-        optimize,
-        warnings,
-        warningsAsErrors
-    }
-
-    // Outcome of one 'dub build' run; the ViewModel turns it into visible status + a notification.
-    public class DubBuildResult
-    {
-        public bool Started { get; set; }
-
-        public int ExitCode { get; set; }
-
-        public string FailureReason { get; set; }
-
-        // The folder dub ran in; also where its .exe output lands unless dub.json says otherwise.
-        public string WorkingDirectory { get; set; }
-
-        public bool Success => Started && ExitCode == 0;
-
-        public static DubBuildResult NotStarted(string reason) =>
-            new DubBuildResult { Started = false, FailureReason = reason };
-    }
-
-    // Outcome of launching the built .exe (run-after-build feature).
-    public class DubRunResult
-    {
-        public bool Started { get; set; }
-
-        public string ExecutablePath { get; set; }
-
-        public string FailureReason { get; set; }
-
-        public static DubRunResult Ok(string exePath) =>
-            new DubRunResult { Started = true, ExecutablePath = exePath };
-
-        public static DubRunResult Fail(string reason) =>
-            new DubRunResult { Started = false, FailureReason = reason };
-    }
-
-    public class DubManagerAP
+    // Everything that touches the dub.json FILE: locating it in the solution,
+    // reading (with legacy-key migration), creating a default one, and saving.
+    public partial class DubManagerAp
     {
         // dub.json must never be picked from build output or VCS metadata folders.
         private static readonly string[] ExcludedFolderNames = { ".git", ".vs", "bin", "obj" };
 
-        public async Task<string> FindDubFileAP()
+        public async System.Threading.Tasks.Task<OperationResult<string>> FindDubFileApAsync()
         {
             // Active project first: in a multi-project solution the first dub.json found
             // by walking every project in arbitrary order belongs to the wrong project.
@@ -121,7 +22,7 @@ namespace DockDAPnext.Service
             var activeDubFile = FindDubJsonInDirectory(GetProjectDirectory(activeProject));
             if (activeDubFile != null)
             {
-                return activeDubFile;
+                return OperationResult<string>.Ok(activeDubFile);
             }
 
             var getAllProject = await VS.Solutions.GetAllProjectsAsync();
@@ -131,11 +32,12 @@ namespace DockDAPnext.Service
                 var dubFile = FindDubJsonInDirectory(GetProjectDirectory(project));
                 if (dubFile != null)
                 {
-                    return dubFile;
+                    return OperationResult<string>.Ok(dubFile);
                 }
             }
 
-            return null;
+            return OperationResult<string>.Fail(
+                "No dub.json exists in this solution (the active project and every other project were checked).");
         }
 
         private static string GetProjectDirectory(Project project)
@@ -205,58 +107,134 @@ namespace DockDAPnext.Service
             return null;
         }
 
-        public DubConfigAP ReadDubFileAP(string path)
+        public OperationResult<DubConfigAp> ReadDubFileAp(string path)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (string.IsNullOrEmpty(path))
             {
-                return null;
+                return OperationResult<DubConfigAp>.Fail("No dub.json path was given.");
+            }
+
+            if (!File.Exists(path))
+            {
+                return OperationResult<DubConfigAp>.Fail($"dub.json does not exist: {path}");
             }
 
             try
             {
                 string jsonString = File.ReadAllText(path);
 
-                return JsonConvert.DeserializeObject<DubConfigAP>(jsonString);
+                var config = JsonConvert.DeserializeObject<DubConfigAp>(jsonString);
+                if (config == null)
+                {
+                    return OperationResult<DubConfigAp>.Fail($"dub.json contains no JSON object: {path}");
+                }
+
+                MigrateLegacyBuildConfigurations(config);
+                return OperationResult<DubConfigAp>.Ok(config);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
                 // Broken JSON must not reach the ViewModel: it used to crash devenv.
-                return null;
+                return OperationResult<DubConfigAp>.Fail(
+                    $"dub.json is not valid JSON, so it was left untouched: {path} ({ex.Message})", ex);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                return null;
+                return OperationResult<DubConfigAp>.Fail($"dub.json could not be read: {path} ({ex.Message})", ex);
             }
         }
 
-        public DubConfigAP CreateDubFileWithDefaultsAP(string path)
+        // Files written by older versions stored the list under 'buildConfigurations',
+        // a key dub ignores, so their flags and options never reached a build. Move that
+        // list into the real 'configurations' field once; the next save writes it there
+        // and drops the stale key. The real key always wins when both are present.
+        private static void MigrateLegacyBuildConfigurations(DubConfigAp config)
+        {
+            if (config.OtherData == null ||
+                !config.OtherData.TryGetValue("buildConfigurations", out var legacyToken))
+            {
+                return;
+            }
+
+            config.OtherData.Remove("buildConfigurations");
+
+            if (config.BuildConfigurations != null && config.BuildConfigurations.Count > 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var token = legacyToken as Newtonsoft.Json.Linq.JToken
+                    ?? Newtonsoft.Json.Linq.JToken.FromObject(legacyToken);
+                config.BuildConfigurations = token.ToObject<List<BuildConfiguration>>()
+                    ?? new List<BuildConfiguration>();
+            }
+            catch (JsonException)
+            {
+                // unreadable legacy list: keep an empty one instead of crashing the UI
+                config.BuildConfigurations = new List<BuildConfiguration>();
+            }
+        }
+
+        public OperationResult<DubConfigAp> CreateDubFileWithDefaultsAp(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
-                return null;
+                return OperationResult<DubConfigAp>.Fail("No target path for dub.json was given.");
             }
 
             var directory = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(directory))
+            if (string.IsNullOrEmpty(directory))
             {
-                Directory.CreateDirectory(directory);
+                return OperationResult<DubConfigAp>.Fail($"The folder of {path} could not be resolved.");
             }
 
-            DubConfigAP config = new DubConfigAP
+            // The Output trio is part of the default file itself: the configurations
+            // below must never point at folders that do not exist yet.
+            var folders = CreateOutputFolders(directory);
+            if (!folders.IsSuccess)
+            {
+                return OperationResult<DubConfigAp>.Fail(folders.Message, folders.Exception);
+            }
+
+            DubConfigAp config = new DubConfigAp
             {
                 // dub warns when a package name is not lower case; targetName keeps the old exe name.
                 Name = "initial-dubfile-dockap",
                 TargetName = "initial-DubFile-DockAP",
                 Description = "A new Dub.json file by DockDAP , AripaParsStudio",
                 Authors = new List<string>() { "DockAPUser" },
+                // Omitted targetType makes dub resolve 'library' on current toolchains,
+                // which would put a .lib into Output and leave nothing to run.
+                TargetType = "executable",
+                // One configuration per Output folder. 'default' is first because dub picks
+                // the first configuration when --config is not passed: a plain build then
+                // lands in Output, debug in Output/debug, release in Output/release.
+                // Paths are relative to the dub.json folder, which sits next to Output.
+                TargetPath = "Output",
+                BuildConfigurations = new List<BuildConfiguration>
+                {
+                    new BuildConfiguration { Name = "default" },
+                    new BuildConfiguration { Name = "debug", TargetPath = "Output/debug" },
+                    new BuildConfiguration { Name = "release", TargetPath = "Output/release" },
+                },
             };
-            string jsonString = JsonConvert.SerializeObject(config, SerializerSettings());
-            File.WriteAllText(path, jsonString);
 
-            return config;
+            try
+            {
+                File.WriteAllText(path, JsonConvert.SerializeObject(config, SerializerSettings()));
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return OperationResult<DubConfigAp>.Fail($"dub.json could not be written: {path} ({ex.Message})", ex);
+            }
+
+            return OperationResult<DubConfigAp>.Ok(config,
+                $"dub.json created at {path}; Output folders created at {folders.Value.OutputDirectoryInfo.FullName}");
         }
 
-        public bool SaveFileDubAP(string path, DubConfigAP inputConfigAp)
+        public bool SaveFileDubAp(string path, DubConfigAp inputConfigAp)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -291,473 +269,5 @@ namespace DockDAPnext.Service
             Formatting = Formatting.Indented,
             NullValueHandling = NullValueHandling.Ignore
         };
-    }
-
-    public static class DubCommandAP
-    {
-        public static async Task<DubBuildResult> BuildDubAsync(string workingDirectory, string arguments)
-        {
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            OutputWindowPane dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAP.DubManagerPaneGuid);
-
-            if (dubPane == null)
-            {
-                // GetOutputWindowPaneAsync(guid) can only LOOK UP a custom pane: it builds the
-                // wrapper with an empty pane name, so IVsOutputWindow.CreatePane is skipped and
-                // GetPane fails (null) the first time in a session. Create the pane ourselves,
-                // then retry the lookup.
-                await CreateDubManagerPaneAsync();
-                dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAP.DubManagerPaneGuid);
-            }
-
-            if (dubPane == null)
-            {
-                return DubBuildResult.NotStarted("The 'Dub Manager' Output pane is unavailable.");
-            }
-
-            await dubPane.ActivateAsync();
-
-            var dubExecutable = ResolveDubExecutable();
-            if (dubExecutable == null)
-            {
-                const string reason = "dub.exe was not found on PATH, via Visual D's DMDInstallDir, or in common D install folders. " +
-                    "Install the D toolchain (its bin folder contains dub.exe) or add that folder to PATH.";
-                await dubPane.WriteLineAsync($"[DOCKDAP] {reason}");
-                return DubBuildResult.NotStarted(reason);
-            }
-
-            ProcessStartInfo processStartInfo = new ProcessStartInfo
-            {
-                FileName = dubExecutable,
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            // dub launches the compiler (dmd/ldc2) from PATH. When dub itself was found through
-            // the known-location fallback, devenv's PATH lacks that folder, so give the child
-            // process dub's own directory first - its sibling compiler becomes reachable.
-            var dubDirectory = Path.GetDirectoryName(dubExecutable);
-            if (!string.IsNullOrEmpty(dubDirectory))
-            {
-                var currentPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-                if (currentPath.IndexOf(dubDirectory, StringComparison.OrdinalIgnoreCase) < 0)
-                {
-                    processStartInfo.EnvironmentVariables["PATH"] =
-                        dubDirectory + Path.PathSeparator + currentPath;
-                }
-            }
-
-            try
-            {
-                await dubPane.WriteLineAsync($"Starting: dub {arguments} (cwd: {workingDirectory})");
-
-                using (System.Diagnostics.Process process = System.Diagnostics.Process.Start(processStartInfo))
-                {
-                    if (process == null)
-                    {
-                        return DubBuildResult.NotStarted("dub.exe could not be started (Process.Start returned null).");
-                    }
-
-                    process.OutputDataReceived += async (sender, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            return;
-                        }
-
-                        try
-                        {
-                            await dubPane.WriteLineAsync(e.Data);
-                        }
-                        catch (Exception ex)
-                        {
-                            // async void handler: an escaping exception would kill devenv.
-                            Debug.WriteLine($"[DOCKDAP] output write failed: {ex.Message}");
-                        }
-                    };
-
-                    process.ErrorDataReceived += async (sender, e) =>
-                    {
-                        if (e.Data == null)
-                        {
-                            return;
-                        }
-
-                        try
-                        {
-                            await dubPane.WriteLineAsync("Error: " + e.Data);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[DOCKDAP] error write failed: {ex.Message}");
-                        }
-                    };
-
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-
-                    await process.WaitForExitAsync();
-
-                    int exitCode = process.ExitCode;
-                    await dubPane.WriteLineAsync(exitCode == 0
-                        ? $"Dub command finished successfully (exit code 0): {arguments}"
-                        : $"Dub command failed (exit code {exitCode}): {arguments}");
-
-                    return new DubBuildResult { Started = true, ExitCode = exitCode };
-                }
-            }
-            catch (Exception e)
-            {
-                await dubPane.WriteLineAsync($"[DOCKDAP] failed to run dub: {e.Message}");
-                return DubBuildResult.NotStarted($"Could not run dub.exe: {e.Message}");
-            }
-        }
-
-        // Creates the extension's 'Dub Manager' output pane (stable GUID) so the first build
-        // of a session does not abort before dub even starts.
-        private static async Task CreateDubManagerPaneAsync()
-        {
-            try
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                var output = await VS.Services.GetOutputWindowAsync();
-                if (output != null)
-                {
-                    Guid paneId = GuidDubAP.DubManagerPaneGuid;
-                    // HRESULT ignored on purpose: CreatePane "errors" when the pane already exists.
-                    output.CreatePane(ref paneId, "Dub Manager", 1, 0);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("[DOCKDAP] create Dub Manager pane failed: " + ex.Message);
-            }
-        }
-
-        // PATH scan instead of relying on CreateProcess lookup, so a missing dub.exe is
-        // reported as a clear message instead of a Win32Exception.
-        private static string ResolveDubExecutable()
-        {
-            const string fileName = "dub.exe";
-
-            // Visual D remembers where DMD lives, and a D install ships dub next to dmd,
-            // so Visual D's folder is checked before the generic known-location scan below.
-            var fromVisualD = ResolveDubFromVisualDInstallDir(fileName);
-            if (fromVisualD != null)
-            {
-                return fromVisualD;
-            }
-
-            try
-            {
-                if (File.Exists(fileName))
-                {
-                    return Path.GetFullPath(fileName);
-                }
-            }
-            catch (Exception)
-            {
-                // current directory unusable; fall through to the PATH scan
-            }
-
-            var pathVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-            foreach (var entry in pathVariable.Split(Path.PathSeparator))
-            {
-                var directory = entry.Trim().Trim('"');
-                if (directory.Length == 0)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var candidate = Path.Combine(directory, fileName);
-                    if (File.Exists(candidate))
-                    {
-                        return candidate;
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // PATH can contain entries with invalid characters; skip them
-                }
-            }
-
-            // Last resort: dub may be installed while devenv's own environment block still lacks
-            // the PATH entry (Visual Studio builds its environment at startup). Probe the common
-            // D toolchain install locations, newest first, so builds still work.
-            foreach (var root in new[] { @"C:\D", @"D:\D" })
-            {
-                try
-                {
-                    if (!Directory.Exists(root))
-                    {
-                        continue;
-                    }
-
-                    foreach (var dir in Directory.EnumerateDirectories(root, "dmd*").OrderByDescending(d => d))
-                    {
-                        var candidate = Path.Combine(dir, "windows", "bin", fileName);
-                        if (File.Exists(candidate))
-                        {
-                            return candidate;
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // unreadable root or invalid path: keep probing
-                }
-            }
-
-            return null;
-        }
-
-        private static string ResolveDubFromVisualDInstallDir(string fileName)
-        {
-            foreach (var view in new[] { Microsoft.Win32.RegistryView.Registry32, Microsoft.Win32.RegistryView.Registry64 })
-            {
-                try
-                {
-                    using (var baseKey = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, view))
-                    using (var visualD = baseKey.OpenSubKey(@"SOFTWARE\visuald"))
-                    {
-                        var dub = FindDubBesideDmd(visualD?.GetValue("DMDInstallDir") as string, fileName);
-                        if (dub != null)
-                        {
-                            return dub;
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // registry view unavailable: try the next one
-                }
-            }
-
-            try
-            {
-                using (var visualD = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\visuald"))
-                {
-                    return FindDubBesideDmd(visualD?.GetValue("DMDInstallDir") as string, fileName);
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        private static string FindDubBesideDmd(string dmdInstallDir, string fileName)
-        {
-            if (string.IsNullOrEmpty(dmdInstallDir))
-            {
-                return null;
-            }
-
-            var candidates = new[]
-            {
-                Path.Combine(dmdInstallDir, "windows", "bin", fileName),
-                Path.Combine(dmdInstallDir, "bin", fileName),
-                dmdInstallDir.EndsWith("bin", StringComparison.OrdinalIgnoreCase)
-                    ? Path.Combine(dmdInstallDir, fileName)
-                    : null
-            };
-
-            foreach (var candidate in candidates)
-            {
-                if (!string.IsNullOrEmpty(candidate) && File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            return null;
-        }
-
-        public static async Task OpenDubFileinVisualStudioAP(string path)
-        {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-            {
-                return;
-            }
-
-            await VS.Documents.OpenAsync(path);
-        }
-    }
-
-    public class APIdockAP : IdubManagerService
-    {
-        private DubManagerAP dubManagerAP;
-        private DprojSyncAP dprojSyncAP;
-
-        public APIdockAP()
-        {
-            dubManagerAP = new DubManagerAP();
-            dprojSyncAP = new DprojSyncAP(dubManagerAP);
-        }
-
-        public async Task<DubConfigAP> CreateOrLoadDubFileAP()
-        {
-
-
-            var dubFilePath = await dubManagerAP.FindDubFileAP();
-            if (dubFilePath != null)
-            {
-                return dubManagerAP.ReadDubFileAP(dubFilePath);
-            }
-
-            var activeProject = await VS.Solutions.GetActiveProjectAsync();
-            if (activeProject == null || string.IsNullOrEmpty(activeProject.FullPath))
-            {
-                return null;
-            }
-
-            // FullPath points at the project file itself; dub.json belongs in its folder.
-            var projectDirectory = System.IO.Path.GetDirectoryName(activeProject.FullPath);
-            string newFilePath = System.IO.Path.Combine(projectDirectory, "dub.json");
-
-            return dubManagerAP.CreateDubFileWithDefaultsAP(newFilePath);
-        }
-
-        // Locates the on-disk dub.json (no creation): the AI tab merges a confirmed
-        // proposal straight into that file, so it must know exactly which file it is.
-        public Task<string> GetDubFilePathAP()
-        {
-            return dubManagerAP.FindDubFileAP();
-        }
-
-        public Task<DubBuildResult> BuildDubAP()
-        {
-            return BuildWithDubAsync("build");
-        }
-
-        public Task<DubBuildResult> BuildDebugDubAP()
-        {
-            return BuildWithDubAsync("build --build=debug");
-        }
-
-        public Task<DubBuildResult> BuildReleaseDubAP()
-        {
-            return BuildWithDubAsync("build --build=release");
-        }
-
-        private async Task<DubBuildResult> BuildWithDubAsync(string arguments)
-        {
-            var dubFilePath = await dubManagerAP.FindDubFileAP();
-
-            if (dubFilePath == null)
-            {
-                return DubBuildResult.NotStarted(
-                    "dub.json was not found in this solution. Create it first with 'Create or load File'.");
-            }
-
-            // dub reads dub.json from its working directory: pass the folder, not the
-            // project file path (a file path makes CreateProcess fail).
-            var workingDirectory = System.IO.Path.GetDirectoryName(dubFilePath);
-            if (string.IsNullOrEmpty(workingDirectory))
-            {
-                return DubBuildResult.NotStarted($"Could not resolve the folder that holds {dubFilePath}.");
-            }
-
-            var result = await DubCommandAP.BuildDubAsync(workingDirectory, arguments);
-            result.WorkingDirectory = workingDirectory;
-            return result;
-        }
-
-        // Run-after-build: launch <targetName>.exe next to dub.json. Only an executable
-        // targetType (dub's default) can run; libraries/static libs are refused.
-        public async Task<DubRunResult> RunBuiltExecutableAP(string workingDirectory)
-        {
-            if (string.IsNullOrEmpty(workingDirectory) || !Directory.Exists(workingDirectory))
-            {
-                return DubRunResult.Fail("The build folder is unknown; build first, then run.");
-            }
-
-            // Prefer the on-disk dub.json; it wins over a possibly stale in-memory config.
-            var config = dubManagerAP.ReadDubFileAP(System.IO.Path.Combine(workingDirectory, "dub.json"))
-                ?? CurrentDubFileConfigAP.CurrentDubConfigAp;
-
-            if (config == null)
-            {
-                return DubRunResult.Fail("dub.json was not loaded; create or load it first.");
-            }
-
-            var targetType = (config.TargetType ?? "executable").Trim().ToLowerInvariant();
-            if (targetType != "executable")
-            {
-                return DubRunResult.Fail($"targetType is '{config.TargetType}', not 'executable': a library produces no program to run.");
-            }
-
-            var targetName = string.IsNullOrWhiteSpace(config.TargetName) ? config.Name : config.TargetName;
-            if (string.IsNullOrWhiteSpace(targetName))
-            {
-                return DubRunResult.Fail("dub.json declares neither 'targetName' nor 'name', so the output file cannot be predicted.");
-            }
-
-            var exePath = System.IO.Path.Combine(workingDirectory, targetName + ".exe");
-            if (!File.Exists(exePath))
-            {
-                return DubRunResult.Fail($"The program was not found at {exePath}. Build the project first.");
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = exePath,
-                    WorkingDirectory = workingDirectory,
-                    UseShellExecute = false
-                });
-
-                return DubRunResult.Ok(exePath);
-            }
-            catch (Exception e)
-            {
-                return DubRunResult.Fail($"Could not start {exePath}: {e.Message}");
-            }
-        }
-
-        public async Task OpenDubFileAP()
-        {
-
-            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
-
-            if (FindDubFilePath == null)
-            {
-                return;
-            }
-
-            await DubCommandAP.OpenDubFileinVisualStudioAP(FindDubFilePath);
-        }
-
-        public async Task<bool> SaveFileAP(DubConfigAP dubConfigAp)
-        {
-            var FindDubFilePath = await dubManagerAP.FindDubFileAP();
-            if (FindDubFilePath == null)
-            {
-                return false;
-            }
-
-            return dubManagerAP.SaveFileDubAP(FindDubFilePath, dubConfigAp);
-        }
-
-        public Task<DprojSyncResult> SyncSourceFilesFromDprojAP()
-        {
-            return dprojSyncAP.SyncAsync();
-        }
-    }
-
-    public static class GuidDubAP
-    {
-        public const string DubManagerPaneString = "d4b8f6e2-3c5a-4f2e-9f7b-1a2b3c4d5e6f";
-        public static readonly Guid DubManagerPaneGuid = new Guid(DubManagerPaneString);
     }
 }

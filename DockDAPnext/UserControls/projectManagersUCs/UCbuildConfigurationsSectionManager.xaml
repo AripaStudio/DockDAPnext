@@ -59,11 +59,11 @@
                     
                      Padding="5"
                      VerticalContentAlignment="Center"
-                     Text="{Binding vmProjectDubManager.txtNameBuildConfig, UpdateSourceTrigger=PropertyChanged}"/>
+                     Text="{Binding VmProjectDubManager.TxtNameBuildConfig, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Style="{StaticResource PrimaryButton}" Grid.Column="1"
                     Margin="5,0,0,0"
                     Padding="10,0"
-                    Command="{Binding vmProjectDubManager.ButtonCommand_ApplayNameBuildConfigurations}">
+                    Command="{Binding VmProjectDubManager.ButtonCommandApplayNameBuildConfigurations}">
                                     <StackPanel Orientation="Horizontal">
                                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Edit}" Width="16" Height="16" Margin="0,0,5,0"/>
                                         <TextBlock Text="Apply Name" />
@@ -87,11 +87,11 @@
                                         
                                          Padding="5"
                                          VerticalContentAlignment="Center"
-                                         Text="{Binding vmProjectDubManager.txtAddNewConfigurationsName, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Text="{Binding VmProjectDubManager.TxtAddNewConfigurationsName, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Style="{StaticResource SuccessButton}" Grid.Column="1"
                                         Margin="5,0,0,0"
                                         Padding="10,0"
-                                        Command="{Binding vmProjectDubManager.ButtonCommand_AddNewNameBuildConfiguarations}">
+                                        Command="{Binding VmProjectDubManager.ButtonCommandAddNewNameBuildConfiguarations}">
                                     <StackPanel Orientation="Horizontal">
                                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
                                         <TextBlock Text="Add New" />
@@ -106,19 +106,47 @@
                                     
                                     
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                     ItemsSource="{Binding vmProjectDubManager.NameConfigListCollection}" 
-                                     SelectedItem="{Binding vmProjectDubManager.SelectedDeletedNameConfigOfList}">
+                                     ItemsSource="{Binding VmProjectDubManager.NameConfigListCollection}" 
+                                     SelectedItem="{Binding VmProjectDubManager.SelectedDeletedNameConfigOfList}">
                             </ListBox>
 
                             <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     HorizontalAlignment="Right"
                                     Padding="10,2"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_DeleteNameConfigurations}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandDeleteNameConfigurations}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.DeleteStep}" Width="14" Height="14" Margin="0,0,5,0"/>
                                     <TextBlock Text="Remove Selected" FontSize="11"/>
                                 </StackPanel>
                             </Button>
+                            <TextBlock Text="Target Path of this configuration"
+                                       Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,15,0,5"/>
+                            <Grid Margin="0,5,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+
+
+
+
+                                         Padding="5"
+                                         VerticalContentAlignment="Center"
+                                         ToolTip="Where this configuration puts its output, relative to the dub.json folder (e.g. Output/debug)."
+                                         Text="{Binding VmProjectDubManager.TxtTargetPathBuildConfig, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Style="{StaticResource PrimaryButton}" Grid.Column="1"
+                                        Margin="5,0,0,0"
+                                        Padding="10,0"
+                                        Command="{Binding VmProjectDubManager.ButtonCommandApplayTargetPathBuildConfig}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Edit}" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock Text="Apply Target Path" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="* Empty clears the override: dub then uses the package-level target path."
+                                       Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}" FontSize="11" FontStyle="Italic"/>
                         </StackPanel>
                     </TabItem>
 
@@ -130,15 +158,15 @@
                              
                              
                               Padding="5"
-                              ItemsSource="{Binding vmProjectDubManager.BuildPOptionTypesComboBox}"
-                              SelectedItem="{Binding vmProjectDubManager.SelectedBuildOptionComboBox }"
+                              ItemsSource="{Binding VmProjectDubManager.BuildPOptionTypesComboBox}"
+                              SelectedItem="{Binding VmProjectDubManager.SelectedBuildOptionComboBox }"
                               >
                             </ComboBox>
 
                             <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                 Width="160"
                                 HorizontalAlignment="Center"
-                                Command="{Binding vmProjectDubManager.ButtonCommand_AddBuildOption}"
+                                Command="{Binding VmProjectDubManager.ButtonCommandAddBuildOption}"
                                 >
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
@@ -151,14 +179,14 @@
                                 
                                 
                                  Margin="0,5,0,5" 
-                                 ItemsSource="{Binding vmProjectDubManager.BuildOptionsList}"
-                                 SelectedItem="{Binding vmProjectDubManager.SelectedBuildOption }"
+                                 ItemsSource="{Binding VmProjectDubManager.BuildOptionsList}"
+                                 SelectedItem="{Binding VmProjectDubManager.SelectedBuildOption }"
                                  />
 
                             <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                 Width="160"
                                 HorizontalAlignment="Center"
-                                Command="{Binding vmProjectDubManager.ButtonCommand_RemoveBuildOption}">
+                                Command="{Binding VmProjectDubManager.ButtonCommandRemoveBuildOption}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Remove Option" />
@@ -175,12 +203,12 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtAddDFlag, UpdateSourceTrigger=PropertyChanged}" />
+                                     Text="{Binding VmProjectDubManager.TxtAddDFlag, UpdateSourceTrigger=PropertyChanged}" />
 
                             <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_DFlag_Add}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandDFlagAdd}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Add D Flag" />
@@ -192,13 +220,13 @@
                                     
                                     
                                      Margin="0,0,0,5"
-                                     ItemsSource="{Binding vmProjectDubManager.DFlagsList}" 
-                                     SelectedItem="{Binding vmProjectDubManager.SelectedDFlag}" />
+                                     ItemsSource="{Binding VmProjectDubManager.DFlagsList}" 
+                                     SelectedItem="{Binding VmProjectDubManager.SelectedDFlag}" />
 
                             <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_DFlag_Remove}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandDFlagRemove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Remove D Flag" />
@@ -216,12 +244,12 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtAddLFlag, UpdateSourceTrigger=PropertyChanged}" />
+                                     Text="{Binding VmProjectDubManager.TxtAddLFlag, UpdateSourceTrigger=PropertyChanged}" />
 
                             <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_LFlag_Add}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandLFlagAdd}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Add L Flag" />
@@ -233,13 +261,13 @@
                                     
                                     
                                      Margin="0,0,0,5"
-                                     ItemsSource="{Binding vmProjectDubManager.LFlagsList}" 
-                                     SelectedItem="{Binding vmProjectDubManager.SelectedLFlag}" />
+                                     ItemsSource="{Binding VmProjectDubManager.LFlagsList}" 
+                                     SelectedItem="{Binding VmProjectDubManager.SelectedLFlag}" />
 
                             <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_LFlag_Remove}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandLFlagRemove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Remove L Flag" />
@@ -257,12 +285,12 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtAddVersion, UpdateSourceTrigger=PropertyChanged}" />
+                                     Text="{Binding VmProjectDubManager.TxtAddVersion, UpdateSourceTrigger=PropertyChanged}" />
 
                             <Button Style="{StaticResource PrimaryButton}" Margin="0,0,0,5"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_Version_Add}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandVersionAdd}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Add Version" />
@@ -274,13 +302,13 @@
                                     
                                     
                                      Margin="0,0,0,5"
-                                     ItemsSource="{Binding vmProjectDubManager.VersionsList}" 
-                                     SelectedItem="{Binding vmProjectDubManager.SelectedVersion}" />
+                                     ItemsSource="{Binding VmProjectDubManager.VersionsList}" 
+                                     SelectedItem="{Binding VmProjectDubManager.SelectedVersion}" />
 
                             <Button Style="{StaticResource DangerButton}" Margin="0,5,0,0"
                                     Width="150"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_Version_Remove}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandVersionRemove}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Remove Version" />
@@ -317,7 +345,7 @@
                                         
                                          Padding="5"
                                          Margin="0,0,0,5"
-                                         Text="{Binding vmProjectDubManager.txtOtherConfigName, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Text="{Binding VmProjectDubManager.TxtOtherConfigName, UpdateSourceTrigger=PropertyChanged}"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,5,5,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="1"
@@ -328,13 +356,13 @@
                                         
                                          Padding="5"
                                          Margin="0,5,0,0"
-                                         Text="{Binding vmProjectDubManager.txtOtherConfigValue, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Text="{Binding VmProjectDubManager.TxtOtherConfigValue, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
 
                             <Button Style="{StaticResource PrimaryButton}" Margin="0,10,0,15"
                                     Width="180"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding vmProjectDubManager.ButtonCommand_OtherConfig_Add}">
+                                    Command="{Binding VmProjectDubManager.ButtonCommandOtherConfigAdd}">
                                 <StackPanel Orientation="Horizontal">
                                     <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
                                     <TextBlock Text="Add Config" />
@@ -347,8 +375,8 @@
                                     
                                      SelectionMode="Single"
                                      Margin="0,0,0,10"
-                                     ItemsSource="{Binding vmProjectDubManager.OtherConfigsList}" 
-                                     SelectedItem="{Binding vmProjectDubManager.SelectedOtherConfig}">
+                                     ItemsSource="{Binding VmProjectDubManager.OtherConfigsList}" 
+                                     SelectedItem="{Binding VmProjectDubManager.SelectedOtherConfig}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0,2">
@@ -368,7 +396,7 @@
                             <Button Style="{StaticResource DangerButton}" 
                                 Width="200"
                                 HorizontalAlignment="Center"
-                                Command="{Binding vmProjectDubManager.ButtonCommand_OtherConfig_Remove}">
+                                Command="{Binding VmProjectDubManager.ButtonCommandOtherConfigRemove}">
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>

@@ -23,18 +23,18 @@ namespace DockDAPnext
     // against BaseToolWindow<T>.PaneType; using typeof(DockDAPwindow) instead makes
     // BaseToolWindow<DockDAPwindow>.Initialize() throw
     // "requires a ProvideToolWindow attribute on the package".
-    [ProvideToolWindow(typeof(DockDAPwindow.Pane)
+    [ProvideToolWindow(typeof(DockDaPwindow.Pane)
     ,Style = VsDockStyle.Tabbed
     , Window = "3AE79031-E1BC-11D0-8F78-00A0C9110057"
     , Orientation = ToolWindowOrientation.Right)]
-    public sealed class DockDAPnextPackage : ToolkitPackage
+    public sealed class DockDaPnextPackage : ToolkitPackage
     {
         // devenv's probe path skips the extension folder, so resolve private assemblies manually
-        static DockDAPnextPackage()
+        static DockDaPnextPackage()
         {
             AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
             {
-                string dir = Path.GetDirectoryName(typeof(DockDAPnextPackage).Assembly.Location);
+                string dir = Path.GetDirectoryName(typeof(DockDaPnextPackage).Assembly.Location);
                 string path = Path.Combine(dir, new AssemblyName(e.Name).Name + ".dll");
                 return File.Exists(path) ? Assembly.LoadFrom(path) : null;
             };
@@ -63,7 +63,8 @@ namespace DockDAPnext
             this.RegisterToolWindows();
 
             // Hooks VS project events so dub.json sourceFiles follows .dproj changes.
-            DprojSyncTrigger.Initialize();
+            // The package-owned JoinableTaskFactory keeps the fire-and-forget hooks tracked.
+            DprojSyncTrigger.Initialize(JoinableTaskFactory);
         }
 
       

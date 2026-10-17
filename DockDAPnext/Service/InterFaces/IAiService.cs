@@ -1,19 +1,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace DockDAPnext.Service.InterFaces
 {
-    public class AiReply
-    {
-        public bool Success { get; set; }
-
-        public string Text { get; set; } = string.Empty;
-
-        public string Error { get; set; } = string.Empty;
-    }
-
     // Contract for talking to an LLM. The extension ships one implementation
     // (OpenAI-compatible REST); other providers or an MCP bridge can implement this too.
     // This is deliberately NOT a chat: every request is stateless and must come back as

@@ -13,55 +13,54 @@ namespace DockDAPnext.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        public VMaboutMe vmAboutMe { get; }
+        public VMaboutMe VmAboutMe { get; }
 
-        public VMshowDubFile vmShowDubFile { get; }
+        public VMshowDubFile VmShowDubFile { get; }
 
-        public VMbuildDubFile vmBuildDubFile { get; }
+        public VMbuildDubFile VmBuildDubFile { get; }
 
-        public VMprojectDubManager vmProjectDubManager { get; }
+        public VMprojectDubManager VmProjectDubManager { get; }
 
-        public VMAiAssistant vmAiAssistant { get; }
+        public VmAiAssistant VmAiAssistant { get; }
 
-        public IdubManagerService dubmanager;
+        public IDubManagerService Dubmanager;
 
 
-        public ReactiveCommand<Unit, Unit> ButtonCommand_CreateOrLoadFile { get; }
-        public ReactiveCommand<Unit, Unit> ButtonCommand_SaveFile { get; }
-        public MainViewModel(VMprojectDubManager vmProjectDubManager , VMaboutMe vmAboutMe , VMbuildDubFile vmBuildDub , VMshowDubFile vmShowDub , VMAiAssistant vmAiAssistant , IdubManagerService dubManagerService)
+        public ReactiveCommand<Unit, Unit> ButtonCommandCreateOrLoadFile { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandSaveFile { get; }
+        public MainViewModel(VMprojectDubManager vmProjectDubManager , VMaboutMe vmAboutMe , VMbuildDubFile vmBuildDub , VMshowDubFile vmShowDub , VmAiAssistant vmAiAssistant , IDubManagerService dubManagerService)
         {
-            this.vmProjectDubManager = vmProjectDubManager;
-            this.vmAboutMe = vmAboutMe;
-            this.vmBuildDubFile = vmBuildDub;
-            this.vmShowDubFile = vmShowDub;
-            this.vmAiAssistant = vmAiAssistant;
-            this.dubmanager = dubManagerService;
+            this.VmProjectDubManager = vmProjectDubManager;
+            this.VmAboutMe = vmAboutMe;
+            this.VmBuildDubFile = vmBuildDub;
+            this.VmShowDubFile = vmShowDub;
+            this.VmAiAssistant = vmAiAssistant;
+            this.Dubmanager = dubManagerService;
 
-            DiagLog.Log("MainViewModel: commands being created");
-            ButtonCommand_CreateOrLoadFile = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandCreateOrLoadFile = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                DiagLog.Log("ENTER ButtonCommand_CreateOrLoadFile");
-                var dubFile = await dubmanager.CreateOrLoadDubFileAP();
-                if (dubFile == null)
+                // OperationResult carries the exact reason (AI_Rules 17), so the user
+                // sees why a load failed instead of a generic "corrupted" guess.
+                var result = await Dubmanager.CreateOrLoadDubFileApAsync();
+                if (!result.IsSuccess)
                 {
-                    ShowWarning("dub.json was not created or loaded: no active project, or the file is corrupted.");
+                    ShowWarning(result.Message);
                     return;
                 }
 
-                CurrentDubFileConfigAP.CurrentDubConfigAp = dubFile;
-                vmProjectDubManager.LoadFromConfig(dubFile);
-                ShowInfo("dub.json was created or loaded.");
+                CurrentDubFileConfigAp.CurrentDubConfigAp = result.Value;
+                vmProjectDubManager.LoadFromConfig(result.Value);
+                ShowInfo(result.Message ?? "dub.json was created or loaded.");
             }));
 
-            ButtonCommand_SaveFile = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandSaveFile = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                DiagLog.Log("ENTER ButtonCommand_SaveFile");
                 if (!EnsureConfigLoaded())
                 {
                     return;
                 }
 
-                var saved = await dubmanager.SaveFileAP(CurrentDubFileConfigAP.CurrentDubConfigAp);
+                var saved = await Dubmanager.SaveFileApAsync(CurrentDubFileConfigAp.CurrentDubConfigAp);
                 if (saved)
                 {
                     ShowInfo("dub.json was saved.");

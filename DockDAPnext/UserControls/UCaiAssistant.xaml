@@ -56,7 +56,7 @@
                              FlowDirection="LeftToRight"
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
-                             Text="{Binding vmAiAssistant.AiPromptText, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding VmAiAssistant.AiPromptText, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Text="Examples (click to fill the box):"
                                Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
@@ -66,15 +66,15 @@
                     <WrapPanel>
                         <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
                                 Content="Description + license"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                Command="{Binding VmAiAssistant.ButtonCommandAiExample}"
                                 CommandParameter="Give my dub.json a short description and an OSI-approved license if they are missing." />
                         <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
                                 Content="Add package vibe-d"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                Command="{Binding VmAiAssistant.ButtonCommandAiExample}"
                                 CommandParameter="Add the package 'vibe-d' to my dub.json dependencies." />
                         <Button Style="{StaticResource BuildButton}" Margin="0,0,8,4" Padding="8,3"
                                 Content="Executable target"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiExample}"
+                                Command="{Binding VmAiAssistant.ButtonCommandAiExample}"
                                 CommandParameter="Make sure targetType is executable and targetName matches the project name." />
                     </WrapPanel>
 
@@ -83,8 +83,8 @@
                                FontWeight="SemiBold"
                                Margin="0,6,0,4" />
 
-                    <ComboBox ItemsSource="{Binding vmAiAssistant.RequestHistory}"
-                              SelectedItem="{Binding vmAiAssistant.SelectedHistoryItem}"
+                    <ComboBox ItemsSource="{Binding VmAiAssistant.RequestHistory}"
+                              SelectedItem="{Binding VmAiAssistant.SelectedHistoryItem}"
                               FlowDirection="LeftToRight"
                               Margin="0,0,0,5" />
 
@@ -99,35 +99,47 @@
                              FlowDirection="LeftToRight"
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
-                             Text="{Binding vmAiAssistant.AiRequestPreview, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding VmAiAssistant.AiRequestPreview, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 
                     <WrapPanel Margin="0,10,0,0">
                         <Button Style="{StaticResource PrimaryButton}"
+                                x:Name="BtnAiPropose"
                                 Width="130"
                                 Margin="0,0,10,4"
                                 Content="Propose change"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiSend}" />
+                                Command="{Binding VmAiAssistant.ButtonCommandAiSend}" />
                         <Button Style="{StaticResource SuccessButton}"
+                                x:Name="BtnAiApply"
                                 Width="140"
                                 Margin="0,0,10,4"
                                 Content="Apply to dub.json"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiApply}" />
+                                Command="{Binding VmAiAssistant.ButtonCommandAiApply}" />
                         <Button Style="{StaticResource BuildButton}"
+                                x:Name="BtnAiCreateConfig"
                                 Width="130"
                                 Margin="0,0,10,4"
                                 Content="Create AI config"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiCreateConfig}" />
+                                Command="{Binding VmAiAssistant.ButtonCommandAiCreateConfig}" />
                         <Button Style="{StaticResource PrimaryButton}"
+                                x:Name="BtnAiOpenConfig"
                                 Width="110"
                                 Margin="0,0,10,4"
                                 Content="Open config"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiOpenConfig}" />
+                                Command="{Binding VmAiAssistant.ButtonCommandAiOpenConfig}" />
                         <Button Style="{StaticResource BuildButton}"
+                                x:Name="BtnAiEditTemplate"
                                 Width="130"
                                 Margin="0,0,10,4"
                                 ToolTip="View or edit the pre-written instruction that is sent with every request"
                                 Content="Prompt template"
-                                Command="{Binding vmAiAssistant.ButtonCommand_AiEditTemplate}" />
+                                Command="{Binding VmAiAssistant.ButtonCommandAiEditTemplate}" />
+                        <Button Style="{StaticResource SuccessButton}"
+                                x:Name="BtnAiAskCopilot"
+                                Width="120"
+                                Margin="0,0,10,4"
+                                ToolTip="Open the GitHub Copilot chat tab with the prompt template plus a 'user text' marker ready to paste; you write and send your request there yourself"
+                                Content="Ask Copilot"
+                                Command="{Binding VmAiAssistant.ButtonCommandAiAskCopilot}" />
                     </WrapPanel>
 
                     <Separator Margin="0,15" />
@@ -143,12 +155,12 @@
                              FlowDirection="LeftToRight"
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
-                             Text="{Binding vmAiAssistant.AiResponseText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                             Text="{Binding VmAiAssistant.AiResponseText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Margin="0,10,0,0"
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
-                               Text="{Binding vmAiAssistant.AiStatusText}" />
+                               Text="{Binding VmAiAssistant.AiStatusText}" />
 
                     <Separator Margin="0,15" />
 

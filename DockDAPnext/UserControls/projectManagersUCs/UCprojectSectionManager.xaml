@@ -58,7 +58,7 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtName_Project , UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding VmProjectDubManager.TxtNameProject , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -74,7 +74,7 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtDescription_Project , UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding VmProjectDubManager.TxtDescriptionProject , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -90,7 +90,7 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtLicense_project , UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding VmProjectDubManager.TxtLicenseProject , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -106,7 +106,7 @@
                                     
                                     
                                      Padding="5"
-                                     Text="{Binding vmProjectDubManager.txtTargetName_project , UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding VmProjectDubManager.TxtTargetNameProject , UpdateSourceTrigger=PropertyChanged}"
                                       />
                         </Grid>
 
@@ -121,11 +121,28 @@
                                      
                                      
                                       Padding="5"
-                                      ItemsSource="{Binding vmProjectDubManager.TargetTypeListComboBox}"
-                                      SelectedItem="{Binding vmProjectDubManager.SelectedTargetType}"
+                                      ItemsSource="{Binding VmProjectDubManager.TargetTypeListComboBox}"
+                                      SelectedItem="{Binding VmProjectDubManager.SelectedTargetType}"
                                       
                                       ToolTip="Select the type of executable to build (e.g., executable, library, none).">
                             </ComboBox>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Target Path:" Grid.Column="0" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBox Grid.Column="1"
+
+
+
+
+                                     Padding="5"
+                                     ToolTip="Folder for the build output, relative to the dub.json folder (e.g. Output). Empty means dub's own default."
+                                     Text="{Binding VmProjectDubManager.TxtTargetPathProject , UpdateSourceTrigger=PropertyChanged}"
+                                      />
                         </Grid>
 
                     </StackPanel>

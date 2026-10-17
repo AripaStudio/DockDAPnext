@@ -13,22 +13,26 @@ namespace DockDAPnext.ViewModels
     public class VMshowDubFile : BaseViewModel
     {
 
-        public ReactiveCommand<Unit, Unit> ButtonCommand_OpenDub { get; }
+        public ReactiveCommand<Unit, Unit> ButtonCommandOpenDub { get; }
 
-        private IdubManagerService apiDockManager;
+        private IDubManagerService _apiDockManager;
 
-        public VMshowDubFile(IdubManagerService DockManager)
+        public VMshowDubFile(IDubManagerService dockManager)
         {
-            apiDockManager = DockManager;
+            _apiDockManager = dockManager;
 
-            ButtonCommand_OpenDub = Guard(ReactiveCommand.CreateFromTask(async () =>
+            ButtonCommandOpenDub = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
                 if (!EnsureConfigLoaded())
                 {
                     return;
                 }
 
-                await apiDockManager.OpenDubFileAP();
+                var result = await _apiDockManager.OpenDubFileApAsync();
+                if (!result.IsSuccess)
+                {
+                    ShowWarning(result.Message);
+                }
             }));
         }
 

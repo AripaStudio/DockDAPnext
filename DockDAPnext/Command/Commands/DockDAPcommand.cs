@@ -1,13 +1,13 @@
 ﻿namespace DockDAPnext.Command
 {
     [Command(PackageGuids.guidDockDAPnextPackageCmdSetString,PackageIds.ShowDockDAPwindowCommand)]
-    internal sealed class DockDAPcommand : BaseCommand<DockDAPcommand>
+    internal sealed class DockDaPcommand : BaseCommand<DockDaPcommand>
     {
         protected override async Task ExecuteAsync(OleMenuCmdEventArgs e)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             // Open the DockDAP tool window (no debug dialogs)
-            await DockDAPwindow.ShowAsync();
+            await DockDaPwindow.ShowAsync();
         }
     }
 }
