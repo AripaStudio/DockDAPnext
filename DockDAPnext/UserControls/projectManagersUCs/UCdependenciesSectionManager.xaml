@@ -108,22 +108,6 @@
                     ItemsSource="{Binding VmProjectDubManager.DependenciesListCollection}"
                     SelectedItem="{Binding VmProjectDubManager.SelectedDependencyRemove}"
                     >
-
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,5,0"/>
-                                <TextBlock Grid.Column="1" Text=": " Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" Margin="0,0,5,0"/>
-                                <TextBlock Grid.Column="2" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" TextWrapping="Wrap" />
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
                 </ListBox>
 
                 <Button Style="{StaticResource DangerButton}" 

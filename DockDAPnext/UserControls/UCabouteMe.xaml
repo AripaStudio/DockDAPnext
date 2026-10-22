@@ -104,7 +104,7 @@
                                FontSize="11"
                                HorizontalAlignment="Right"
                                Margin="0,2,0,0" />
-                    <TextBlock Text="v2.0.0"
+                    <TextBlock Text="{Binding VmAboutMe.VersionText}"
                                Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}"
                                FontSize="11"
                                HorizontalAlignment="Right"

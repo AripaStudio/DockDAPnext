@@ -37,6 +37,38 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="10,0">
+                <Border Margin="0,0,0,10" Padding="10" CornerRadius="3"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}"
+                        Background="{DynamicResource {x:Static vs:VsBrushes.CommandBarMenuBackgroundGradientKey}}">
+                    <StackPanel>
+                        <TextBlock Text="Solution project"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"/>
+                        <DockPanel Margin="0,4,0,0">
+                            <Button DockPanel.Dock="Right"
+                                    Content="Refresh"
+                                    Margin="6,0,0,0"
+                                    Command="{Binding ButtonCommandRefreshProjects}"
+                                    ToolTip="Re-read the solution projects and their dub.json files"/>
+                            <ComboBox ItemsSource="{Binding SolutionProjects}"
+                                      SelectedItem="{Binding SelectedSolutionProject}"
+                                      DisplayMemberPath="DisplayName"
+                                      AutomationProperties.AutomationId="SolutionProjectSelector"
+                                      AutomationProperties.Name="Solution project"
+                                      MinHeight="24"
+                                      VerticalContentAlignment="Center"
+                                      ToolTip="Each project's dub.json is managed separately"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding SelectedProjectStatus}"
+                                   AutomationProperties.AutomationId="SelectedProjectStatus"
+                                   AutomationProperties.LiveSetting="Polite"
+                                   Style="{StaticResource HintText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
                 <DockPanel Margin="0,0,0,10">
                     <Label BorderBrush="{DynamicResource {x:Static vs:VsBrushes.PanelBorderKey}}" BorderThickness="1"
                            Padding="8,5"

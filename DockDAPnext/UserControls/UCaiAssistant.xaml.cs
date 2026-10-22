@@ -4,6 +4,7 @@ using DockDAPnext.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Shell;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -20,6 +21,8 @@ namespace DockDAPnext.UserControls
         public UCaiAssistant()
         {
             InitializeComponent();
+
+            Debug.WriteLine("[DOCKDAP] UCaiAssistant loaded");
 
             if (System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
             {
@@ -38,9 +41,6 @@ namespace DockDAPnext.UserControls
             this.Loaded += AttachHoverAnimations;
         }
 
-        // The five action buttons grow slightly and tint with the current VS accent
-        // while hovered. AnimationManagerAp copies the brushes locally first, so the
-        // shared (frozen) theme brushes from the styles are never animated directly.
         private void AttachHoverAnimations(object sender, RoutedEventArgs e)
         {
             if (_hoverAnimationsAttached)
@@ -50,30 +50,12 @@ namespace DockDAPnext.UserControls
 
             _hoverAnimationsAttached = true;
 
-            var duration = TimeSpan.FromMilliseconds(160);
-            var hoverColor = ResolveAccentColor();
-
-            foreach (var button in new[] { BtnAiPropose, BtnAiApply, BtnAiCreateConfig, BtnAiOpenConfig, BtnAiEditTemplate })
+            var duration = TimeSpan.FromMilliseconds(500);
+            foreach (var button in new[]
+                         { BtnAiPropose, BtnAiApply, BtnAiCreateConfig, BtnAiOpenConfig, BtnAiEditTemplate })
             {
-                AnimationManagerAp.AddHoverAnimation(button, button.ActualWidth + 8, hoverColor, Colors.White, duration);
+                AnimationManagerAp.AddHoverScale(button, 1.05, duration);
             }
-        }
-
-        private Color ResolveAccentColor()
-        {
-            try
-            {
-                if (Application.Current?.TryFindResource(VsBrushes.AccentMediumKey) is SolidColorBrush brush)
-                {
-                    return brush.Color;
-                }
-            }
-            catch (Exception)
-            {
-                // no shell/theme service available: fall through to the default accent
-            }
-
-            return Color.FromRgb(0x00, 0x78, 0xD4);
         }
     }
 }
