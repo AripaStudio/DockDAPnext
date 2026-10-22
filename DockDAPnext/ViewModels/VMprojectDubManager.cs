@@ -1,4 +1,4 @@
-using DockDAPnext.Service;
+﻿using DockDAPnext.Service;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -104,6 +104,19 @@ namespace DockDAPnext.ViewModels
 
             _currentBuildConfigId = 0;
             LoadCurrentBuildConfigurationLists();
+        }
+
+        // Empties every field after the selector moved to a project whose dub.json did not load.
+        public void ClearConfig()
+        {
+            LoadFromConfig(new DubConfigAp
+            {
+                TargetType = string.Empty,
+            });
+
+            // Enum.TryParse leaves the combo on the PREVIOUS project's type; the config is
+            // already null here, so the setter only updates the display.
+            SelectedTargetType = TargetTypeEnum.autodetect;
         }
 
         private void LoadCurrentBuildConfigurationLists()

@@ -1,5 +1,6 @@
 using ReactiveUI;
 using System;
+using System.Linq;
 using System.Reactive;
 
 namespace DockDAPnext.ViewModels
@@ -39,8 +40,15 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                configuration.DFlags.Add(TxtAddDFlag);
-                DFlagsList.Add(TxtAddDFlag);
+                var flag = TxtAddDFlag.Trim();
+                if (configuration.DFlags.Any(f => string.Equals(f, flag, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowWarning($"'{flag}' is already a D flag of this configuration.");
+                    return;
+                }
+
+                configuration.DFlags.Add(flag);
+                DFlagsList.Add(flag);
             }));
 
             ButtonCommandDFlagRemove = Guard(ReactiveCommand.Create(() =>
@@ -74,8 +82,15 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                configuration.LFlags.Add(TxtAddLFlag);
-                LFlagsList.Add(TxtAddLFlag);
+                var flag = TxtAddLFlag.Trim();
+                if (configuration.LFlags.Any(f => string.Equals(f, flag, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowWarning($"'{flag}' is already an L flag of this configuration.");
+                    return;
+                }
+
+                configuration.LFlags.Add(flag);
+                LFlagsList.Add(flag);
             }));
 
             ButtonCommandLFlagRemove = Guard(ReactiveCommand.Create(() =>
@@ -109,8 +124,15 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                configuration.Versions.Add(TxtAddVersion);
-                VersionsList.Add(TxtAddVersion);
+                var version = TxtAddVersion.Trim();
+                if (configuration.Versions.Any(v => string.Equals(v, version, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowWarning($"'{version}' is already a version of this configuration.");
+                    return;
+                }
+
+                configuration.Versions.Add(version);
+                VersionsList.Add(version);
             }));
 
             ButtonCommandVersionRemove = Guard(ReactiveCommand.Create(() =>
@@ -144,8 +166,20 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                configuration.OtherDataBuildConfiguration[TxtOtherConfigName] = TxtOtherConfigValue;
-                OtherConfigsList.Add(new Tuple<string, string>(TxtOtherConfigName, TxtOtherConfigValue));
+                var name = TxtOtherConfigName.Trim();
+                var value = TxtOtherConfigValue.Trim();
+                configuration.OtherDataBuildConfiguration[name] = value;
+
+                var oldRow = OtherConfigsList.FirstOrDefault(
+                    row => string.Equals(row.Item1, name, StringComparison.OrdinalIgnoreCase));
+                if (oldRow == null)
+                {
+                    OtherConfigsList.Add(new Tuple<string, string>(name, value));
+                }
+                else
+                {
+                    OtherConfigsList[OtherConfigsList.IndexOf(oldRow)] = new Tuple<string, string>(name, value);
+                }
             }));
 
             ButtonCommandOtherConfigRemove = Guard(ReactiveCommand.Create(() =>
@@ -188,6 +222,14 @@ namespace DockDAPnext.ViewModels
             {
                 if (!TryGetCurrentBuildConfiguration(out var configuration))
                 {
+                    return;
+                }
+
+                // An empty selection reads as the enum default, which would delete that
+                // option from the configuration without the user picking anything.
+                if (!BuildOptionsList.Contains(SelectedBuildOption))
+                {
+                    ShowWarning("Select a build option before removing it.");
                     return;
                 }
 

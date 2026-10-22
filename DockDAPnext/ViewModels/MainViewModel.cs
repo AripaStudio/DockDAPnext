@@ -11,7 +11,7 @@ using ReactiveUI;
 
 namespace DockDAPnext.ViewModels
 {
-    public class MainViewModel : BaseViewModel
+    public partial class MainViewModel : BaseViewModel
     {
         public VMaboutMe VmAboutMe { get; }
 
@@ -39,8 +39,8 @@ namespace DockDAPnext.ViewModels
 
             ButtonCommandCreateOrLoadFile = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
-                // OperationResult carries the exact reason (AI_Rules 17), so the user
-                // sees why a load failed instead of a generic "corrupted" guess.
+                // OperationResult carries the exact reason, so the user sees why a load
+                // failed instead of a generic "corrupted" guess.
                 var result = await Dubmanager.CreateOrLoadDubFileApAsync();
                 if (!result.IsSuccess)
                 {
@@ -51,6 +51,9 @@ namespace DockDAPnext.ViewModels
                 CurrentDubFileConfigAp.CurrentDubConfigAp = result.Value;
                 vmProjectDubManager.LoadFromConfig(result.Value);
                 ShowInfo(result.Message ?? "dub.json was created or loaded.");
+
+                // The fresh dub.json changes the row's label, so the selector list is refreshed.
+                await RefreshSolutionProjectsAsync();
             }));
 
             ButtonCommandSaveFile = Guard(ReactiveCommand.CreateFromTask(async () =>
@@ -61,16 +64,17 @@ namespace DockDAPnext.ViewModels
                 }
 
                 var saved = await Dubmanager.SaveFileApAsync(CurrentDubFileConfigAp.CurrentDubConfigAp);
-                if (saved)
+                if (!saved.IsSuccess)
                 {
-                    ShowInfo("dub.json was saved.");
+                    // The service knows which file and why: never replace that with a generic guess.
+                    ShowWarning("Save failed: " + saved.Message);
+                    return;
                 }
-                else
-                {
-                    ShowWarning("Save failed: dub.json was not found or could not be written.");
-                }
+
+                ShowInfo("dub.json was saved.");
             }));
 
+            InitializeSolutionProjects();
         }
     }
 }

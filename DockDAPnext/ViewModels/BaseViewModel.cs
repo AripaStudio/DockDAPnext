@@ -33,7 +33,7 @@ namespace DockDAPnext.ViewModels
 
         private static void ShowMessage(string message, MessageBoxIcon icon)
         {
-            // Messages are English (AI_Rules 12); RTL options would mirror their punctuation.
+            // Messages are English; RTL options would mirror their punctuation.
             MessageBox.Show(message, "DockDAP", MessageBoxButtons.OK, icon, MessageBoxDefaultButton.Button1);
         }
 

@@ -1,5 +1,7 @@
 using DockDAPnext.Service;
 using ReactiveUI;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
@@ -79,7 +81,7 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                configurations.Add(new BuildConfiguration { Name = TxtAddNewConfigurationsName });
+                configurations.Add(CreateConfiguration(TxtAddNewConfigurationsName));
                 NameConfigListCollection.Add(TxtAddNewConfigurationsName);
                 _currentBuildConfigId = configurations.Count - 1;
                 LoadCurrentBuildConfigurationLists();
@@ -104,8 +106,15 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                CurrentConfig.Authors.Add(TxtAddNewAuthors);
-                AuthorsList.Add(TxtAddNewAuthors);
+                var author = TxtAddNewAuthors.Trim();
+                if (CurrentConfig.Authors.Any(a => string.Equals(a, author, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowWarning($"'{author}' is already listed as an author.");
+                    return;
+                }
+
+                CurrentConfig.Authors.Add(author);
+                AuthorsList.Add(author);
             }));
 
             ButtonCommandAuthorsRemove = Guard(ReactiveCommand.Create(() =>
@@ -139,8 +148,27 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                CurrentConfig.Dependencies[TxtAddDependencyKey] = TxtAddDependencyValue;
-                DependenciesListCollection.Add($"{TxtAddDependencyKey}: {TxtAddDependencyValue}");
+                var key = TxtAddDependencyKey.Trim();
+                var value = TxtAddDependencyValue.Trim();
+                var existingKey = CurrentConfig.Dependencies.Keys.FirstOrDefault(
+                    k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+                var actualKey = existingKey ?? key;
+
+                CurrentConfig.Dependencies[actualKey] = value;
+
+                // Replacing the row keeps the list in step with the dictionary; appending
+                // it again used to show a second line for a package that has one entry.
+                var oldLine = DependenciesListCollection.FirstOrDefault(d => string.Equals(
+                    DependencyKeyOf(d), actualKey, StringComparison.OrdinalIgnoreCase));
+                if (oldLine == null)
+                {
+                    DependenciesListCollection.Add(DependencyLine(actualKey, value));
+                }
+                else
+                {
+                    DependenciesListCollection[DependenciesListCollection.IndexOf(oldLine)] =
+                        DependencyLine(actualKey, value);
+                }
             }));
 
             ButtonCommandRemoveSelectedDependency = Guard(ReactiveCommand.Create(() =>
@@ -156,8 +184,14 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                var keyToRemove = SelectedDependencyRemove.Split(':')[0].Trim();
-                CurrentConfig.Dependencies.Remove(keyToRemove);
+                var keyToRemove = DependencyKeyOf(SelectedDependencyRemove);
+                var existingKey = CurrentConfig.Dependencies.Keys.FirstOrDefault(
+                    k => string.Equals(k, keyToRemove, StringComparison.OrdinalIgnoreCase));
+                if (existingKey != null)
+                {
+                    CurrentConfig.Dependencies.Remove(existingKey);
+                }
+
                 DependenciesListCollection.Remove(SelectedDependencyRemove);
             }));
 
@@ -175,8 +209,15 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                CurrentConfig.SourceFiles.Add(TxtAddSourcePath);
-                SourceFilePathListCollection.Add(TxtAddSourcePath);
+                var sourcePath = TxtAddSourcePath.Trim();
+                if (CurrentConfig.SourceFiles.Any(p => string.Equals(p?.Trim(), sourcePath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowWarning($"'{sourcePath}' is already in sourceFiles.");
+                    return;
+                }
+
+                CurrentConfig.SourceFiles.Add(sourcePath);
+                SourceFilePathListCollection.Add(sourcePath);
             }));
 
             ButtonCommandSourceFileRemovePath = Guard(ReactiveCommand.Create(() =>
@@ -196,7 +237,7 @@ namespace DockDAPnext.ViewModels
                 SourceFilePathListCollection.Remove(SelectedSourcePathListRemove);
             }));
 
-            // Replace dub.json sourceFiles with the .d files listed in the active .visualdproj.
+            // Replace dub.json sourceFiles with the .d files listed in the selected .visualdproj.
             ButtonCommandSyncFromDproj = Guard(ReactiveCommand.CreateFromTask(async () =>
             {
                 var result = await _dubManager.SyncSourceFilesFromDprojApAsync();
@@ -211,6 +252,32 @@ namespace DockDAPnext.ViewModels
                     ? $"sourceFiles synced from the project file: +{result.Added} added, -{result.Removed} removed, {result.Total} total."
                     : "sourceFiles already match the project file; dub.json was not changed.");
             }));
+        }
+
+        // A configuration this extension creates carries ready-to-use lists: files loaded
+        // from disk are normalized in LoadFromConfig, but a brand-new entry must not hand
+        // the flag tabs a null list (adding a configuration used to throw).
+        public static BuildConfiguration CreateConfiguration(string name) => new BuildConfiguration
+        {
+            Name = name,
+            DFlags = new List<string>(),
+            LFlags = new List<string>(),
+            Versions = new List<string>(),
+            BuildOptions = new List<BuildOptionTypes>(),
+        };
+
+        // One display format for a dependency row, so a lookup can find the row it must replace.
+        private static string DependencyLine(string key, string value) => key + ": " + value;
+
+        private static string DependencyKeyOf(string line)
+        {
+            if (string.IsNullOrEmpty(line))
+            {
+                return string.Empty;
+            }
+
+            var separator = line.IndexOf(": ", StringComparison.Ordinal);
+            return (separator < 0 ? line : line.Substring(0, separator)).Trim();
         }
     }
 }

@@ -210,10 +210,10 @@ namespace DockDAPnext.ViewModels
                 // rules text = the fixed template; 'user text' = where the user's own
                 // request belongs when they paste it into the Copilot chat box.
                 var promptText = rules + Environment.NewLine + Environment.NewLine + "user text" + Environment.NewLine;
-
                 await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 var result = CopilotBridgeAp.OpenChatWithPrompt(promptText);
                 AiStatusText = result.IsSuccess ? result.Message : "Ask Copilot failed: " + result.Message;
+                
             }));
 
             // The template lives in ai.json, not in the request box; this button is the

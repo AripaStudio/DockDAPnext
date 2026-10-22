@@ -29,6 +29,22 @@ namespace DockDAPnext.ViewModels
             set => this.RaiseAndSetIfChanged(ref _buildStatusText, value);
         }
 
+        private bool _isBuilding;
+
+        // Bound by the three build buttons: one dub build at a time in one folder, or two
+        // processes would interleave their output and fight over the same object files.
+        public bool IsBuilding
+        {
+            get => _isBuilding;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _isBuilding, value);
+                this.RaisePropertyChanged(nameof(CanStartBuild));
+            }
+        }
+
+        public bool CanStartBuild => !_isBuilding;
+
         private bool _runAfterBuild;
 
         // Bound by the "Run after build" checkbox: when on, a successful build of an
@@ -68,10 +84,13 @@ namespace DockDAPnext.ViewModels
         // asked; only an executable targetType has a program worth launching.
         private async Task OfferRunAsync(string label, DubBuildResult result)
         {
-            var targetType = (CurrentConfig?.TargetType ?? "executable").Trim().ToLowerInvariant();
+            // The build ran against the on-disk dub.json: prefer its targetType over the
+            // in-memory twin, which can be stale (edited file, another project selected).
+            var builtTargetType = result.TargetType ?? CurrentConfig?.TargetType;
+            var targetType = (builtTargetType ?? "executable").Trim().ToLowerInvariant();
             if (targetType != "executable")
             {
-                ShowInfo($"{label} build finished successfully (exit code 0).\n\nThe target is a library ('{CurrentConfig.TargetType}'), so there is no program to run.");
+                ShowInfo($"{label} build finished successfully (exit code 0).\n\nThe target is a library ('{builtTargetType}'), so there is no program to run.");
                 return;
             }
 
@@ -99,34 +118,48 @@ namespace DockDAPnext.ViewModels
 
         private async Task RunBuildAsync(string label, Func<Task<DubBuildResult>> build)
         {
+            if (IsBuilding)
+            {
+                BuildStatusText = $"{label} build not started: another build is still running.";
+                return;
+            }
+
             if (!EnsureConfigLoaded())
             {
                 return;
             }
 
-            BuildStatusText = $"{label} build running...";
-            var result = await build();
+            IsBuilding = true;
+            try
+            {
+                BuildStatusText = $"{label} build running...";
+                var result = await build();
 
-            if (result == null)
-            {
-                BuildStatusText = $"{label} build: the service returned no result.";
-                return;
-            }
+                if (result == null)
+                {
+                    BuildStatusText = $"{label} build: the service returned no result.";
+                    return;
+                }
 
-            if (result.Success)
-            {
-                BuildStatusText = $"{label} build finished (exit code 0).";
-                await OfferRunAsync(label, result);
+                if (result.Success)
+                {
+                    BuildStatusText = $"{label} build finished (exit code 0).";
+                    await OfferRunAsync(label, result);
+                }
+                else if (!result.Started)
+                {
+                    BuildStatusText = $"{label} build not started: {result.FailureReason}";
+                    ShowWarning($"{label} build was not started: {result.FailureReason}");
+                }
+                else
+                {
+                    BuildStatusText = $"{label} build failed (exit code {result.ExitCode}) - see the 'Dub Manager' Output pane.";
+                    ShowWarning($"{label} build failed with exit code {result.ExitCode}. Details are in the 'Dub Manager' Output pane.");
+                }
             }
-            else if (!result.Started)
+            finally
             {
-                BuildStatusText = $"{label} build not started: {result.FailureReason}";
-                ShowWarning($"{label} build was not started: {result.FailureReason}");
-            }
-            else
-            {
-                BuildStatusText = $"{label} build failed (exit code {result.ExitCode}) - see the 'Dub Manager' Output pane.";
-                ShowWarning($"{label} build failed with exit code {result.ExitCode}. Details are in the 'Dub Manager' Output pane.");
+                IsBuilding = false;
             }
         }
     }

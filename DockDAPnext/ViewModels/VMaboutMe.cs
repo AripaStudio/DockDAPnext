@@ -19,6 +19,9 @@ namespace DockDAPnext.ViewModels
         private const string WebSiteLink = "https://aripapars.top/";
         private const string TelegramLink = "https://t.me/AripaStudio";
 
+        // The manifest's version, so the About card cannot drift from the real release number.
+        public string VersionText => "v" + Vsix.Version;
+
         // Public: WPF binding silently ignores non-public members, so the About buttons did nothing.
         public ReactiveCommand<Unit, Unit> ButtonCommandGithubLink { get; }
         public ReactiveCommand<Unit, Unit> ButtonCommandTelegramLink { get; }
