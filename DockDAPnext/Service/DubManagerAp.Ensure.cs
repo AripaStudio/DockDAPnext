@@ -62,13 +62,16 @@ namespace DockDAPnext.Service
                 changed = true;
             }
 
-            if (changed && !SaveFileDubAp(dubFilePath, config))
+            if (changed)
             {
                 // Loud, not silent: the in-memory config must never claim a disk state
                 // that dub.json does not have.
-                return OperationResult<DubConfigAp>.Fail(
-                    $"{dubFilePath} was upgraded in memory but could not be written to disk (read-only or locked file).",
-                    null, config);
+                var saved = SaveFileDubAp(dubFilePath, config);
+                if (!saved.IsSuccess)
+                {
+                    return OperationResult<DubConfigAp>.Fail(
+                        $"{dubFilePath} was upgraded in memory but {saved.Message}", saved.Exception, config);
+                }
             }
 
             return OperationResult<DubConfigAp>.Ok(config, changed
@@ -105,22 +108,27 @@ namespace DockDAPnext.Service
             }
         }
 
-        // Adds one named configuration when it is missing; the targetPath is written
-        // relative to the dub.json folder (absolute when the Output folder sits on a
-        // different drive, which a relative string cannot express).
+        // Adds one named configuration when it is missing. An existing configuration
+        // without a targetPath gets one too (the old file kept 'release' bare, so
+        // release builds landed in the project root); a targetPath the user already
+        // chose is never overwritten.
         private static bool EnsureConfigurationAp(
             DubConfigAp config, string name, string dubDirectory, DirectoryInfo outputDirectory)
         {
-            var exists = config.BuildConfigurations.Any(
+            var targetPath = ResolveTargetPath(dubDirectory, outputDirectory, name);
+            var existing = config.BuildConfigurations.FirstOrDefault(
                 c => string.Equals(c?.Name, name, StringComparison.OrdinalIgnoreCase));
-            if (exists)
-            {
-                return false;
-            }
 
-            var targetPath = outputDirectory == null || string.IsNullOrEmpty(dubDirectory)
-                ? "Output/" + name
-                : PathHelperAp.MakeRelative(dubDirectory, outputDirectory.FullName);
+            if (existing != null)
+            {
+                if (!string.IsNullOrWhiteSpace(existing.TargetPath))
+                {
+                    return false;
+                }
+
+                existing.TargetPath = targetPath;
+                return true;
+            }
 
             config.BuildConfigurations.Add(new BuildConfiguration
             {
@@ -129,6 +137,18 @@ namespace DockDAPnext.Service
             });
 
             return true;
+        }
+
+        // Relative to the dub.json folder; absolute when the Output folder sits on a
+        // different drive, which a relative string cannot express.
+        private static string ResolveTargetPath(string dubDirectory, DirectoryInfo outputDirectory, string name)
+        {
+            if (outputDirectory == null || string.IsNullOrEmpty(dubDirectory))
+            {
+                return "Output/" + name;
+            }
+
+            return PathHelperAp.MakeRelative(dubDirectory, outputDirectory.FullName);
         }
     }
 }

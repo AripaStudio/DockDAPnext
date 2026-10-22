@@ -3,6 +3,8 @@
   <PropertyGroup>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <LangVersion>latest</LangVersion>
+    <!-- Same sources must produce the same DLL: deployed-vs-built md5 comparisons are how this project finds stale extensions. -->
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -57,12 +59,14 @@
     <Compile Include="Service\CopilotBridgeAp.cs" />
     <Compile Include="Service\CurrentDubFileConfigAP.cs" />
     <Compile Include="Service\DubCommandAp.cs" />
+    <Compile Include="Service\SourceFileProbeAp.cs" />
     <Compile Include="Service\DubExecutableResolver.cs" />
     <Compile Include="Service\DubManagerAP.cs" />
     <Compile Include="Service\DubManagerAp.Ensure.cs" />
     <Compile Include="Service\DprojSyncAP.cs" />
     <Compile Include="Service\GuidDubAp.cs" />
     <Compile Include="Service\PathHelperAp.cs" />
+    <Compile Include="Service\SolutionProjectsAp.cs" />
     <Compile Include="Service\Models\AiChangeProposal.cs" />
     <Compile Include="Service\Models\AiConfigAp.cs" />
     <Compile Include="Service\Models\BuildConfiguration.cs" />
@@ -73,6 +77,7 @@
     <Compile Include="Service\Models\DprojSyncResult.cs" />
     <Compile Include="Service\Models\OperationResult.cs" />
     <Compile Include="Service\Models\OutputDirectoryPathsStruct.cs" />
+    <Compile Include="Service\Models\SolutionDubProject.cs" />
     <Compile Include="Service\DprojSyncTrigger.cs" />
     <Compile Include="Service\InterFaces\AiReply.cs" />
     <Compile Include="Service\InterFaces\IAiService.cs" />
@@ -128,6 +133,7 @@
     </Compile>
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.Projects.cs" />
     <Compile Include="ViewModels\VMAiAssistant.cs" />
     <Compile Include="ViewModels\VMAiAssistant.Commands.cs" />
     <Compile Include="ViewModels\VMAiAssistant.TemplateEditor.cs" />

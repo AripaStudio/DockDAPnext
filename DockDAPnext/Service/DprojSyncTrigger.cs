@@ -8,32 +8,28 @@ using Microsoft.VisualStudio.Threading;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DockDAPnext.Service
 {
-    // Bridges VS project events to the dub.json source sync: file add/remove/rename and
-    // project save trigger an automatic sync (only after a dub.json was loaded this session,
-    // so the tool never rewrites a file it does not own yet).
+    // Bridges VS project events to the dub.json source sync, only after a file was loaded this session.
     public static class DprojSyncTrigger
     {
         private static bool _initialized;
 
-        // The RunAsync results are kept in fields so the loops stay tracked/joinable on
-        // package teardown instead of being discarded (VSSDK007).
+        // RunAsync results are kept in fields so the loops stay tracked/joinable (VSSDK007).
         private static JoinableTask _eventHookTask;
         private static JoinableTask _syncLoopTask;
 
-        // The package's own factory (set from DockDaPnextPackage.InitializeAsync): package-owned
-        // JoinableTasks are tracked for shutdown, so fire-and-forget stays legal (VSSDK007).
+        // Package-owned JoinableTasks are tracked for shutdown, so fire-and-forget stays legal (VSSDK007).
         private static JoinableTaskFactory _factory;
 
-        // 0 = idle, 1 = sync running, 2 = another change arrived while running (re-run).
-        private static int _state;
+        // One loop at a time; a change that arrives during a run is coalesced into one more run.
+        private static readonly object SyncGate = new object();
+        private static bool _syncRunning;
+        private static bool _syncRequested;
 
-        // COM event sources are kept in fields so they live as long as the package.
-        // Fully qualified: Community.VisualStudio.Toolkit defines same-named types.
+        // Kept in fields so they outlive the hook (Toolkit defines same-named types).
         private static EnvDTE.DocumentEvents _documentEvents;
         private static EnvDTE.ProjectItemsEvents _projectItemsEvents;
 
@@ -42,7 +38,9 @@ namespace DockDAPnext.Service
             if (_initialized)
             {
                 return;
-            }            _initialized = true;
+            }
+
+            _initialized = true;
             _factory = factory ?? ThreadHelper.JoinableTaskFactory;
 
             _eventHookTask = _factory.RunAsync(async () =>
@@ -83,11 +81,18 @@ namespace DockDAPnext.Service
                 return;
             }
 
-            var extension = Path.GetExtension(path);
-            if (IsDproj(extension))
+            if (!SolutionProjectsAp.IsDProject(path))
             {
-                ScheduleSync("project save");
+                return;
             }
+
+            if (!BelongsToSelectedProject(path))
+            {
+                Debug.WriteLine("[DOCKDAP] auto-sync skipped (other project): " + path);
+                return;
+            }
+
+            ScheduleSync("project save");
         }
 
         private static void OnItemAdded(EnvDTE.ProjectItem item) => ScheduleForDSource(item, "item added");
@@ -104,15 +109,45 @@ namespace DockDAPnext.Service
                 return;
             }
 
-            if (string.Equals(Path.GetExtension(name), ".d", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(Path.GetExtension(name), ".d", StringComparison.OrdinalIgnoreCase))
             {
-                ScheduleSync(reason);
+                return;
             }
+
+            var projectPath = GetContainingProjectPath(item);
+            if (projectPath != null && !BelongsToSelectedProject(projectPath))
+            {
+                Debug.WriteLine("[DOCKDAP] auto-sync skipped (other project): " + projectPath);
+                return;
+            }
+
+            ScheduleSync(reason);
         }
 
-        private static bool IsDproj(string extension) =>
-            string.Equals(extension, ".visualdproj", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(extension, ".dproj", StringComparison.OrdinalIgnoreCase);
+        // The selector wins: another project's event must not write the selected project's dub.json.
+        private static bool BelongsToSelectedProject(string path)
+        {
+            var selected = CurrentDubFileConfigAp.SelectedProject;
+            if (selected == null || string.IsNullOrEmpty(selected.Directory))
+            {
+                return true;
+            }
+
+            return SolutionProjectsAp.IsInsideDirectory(path, selected.Directory);
+        }
+
+        private static string GetContainingProjectPath(EnvDTE.ProjectItem item)
+        {
+            try
+            {
+                return item?.ContainingProject?.FullName;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[DOCKDAP] project lookup failed: " + ex.Message);
+                return null;
+            }
+        }
 
         private static void ScheduleSync(string reason)
         {
@@ -121,12 +156,15 @@ namespace DockDAPnext.Service
                 return;
             }
 
-            // A burst of events (multi-file add) marks state 2 so the loop runs once more
-            // after the current pass and sees the final file list.
-            if (Interlocked.CompareExchange(ref _state, 1, 0) != 0)
+            lock (SyncGate)
             {
-                Interlocked.CompareExchange(ref _state, 2, 1);
-                return;
+                _syncRequested = true;
+                if (_syncRunning)
+                {
+                    return;
+                }
+
+                _syncRunning = true;
             }
 
             _syncLoopTask = _factory.RunAsync(async () =>
@@ -135,22 +173,32 @@ namespace DockDAPnext.Service
                 {
                     while (true)
                     {
+                        lock (SyncGate)
+                        {
+                            _syncRequested = false;
+                        }
+
                         await RunOnceAsync(reason);
 
-                        // 1 (nothing new) -> 0: done. 2 (new request) stays 2: loop again.
-                        if (Interlocked.CompareExchange(ref _state, 0, 1) == 1)
+                        // Checked under the lock: a request landing during the run is never dropped.
+                        lock (SyncGate)
                         {
-                            break;
+                            if (!_syncRequested)
+                            {
+                                _syncRunning = false;
+                                return;
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[DOCKDAP] auto-sync failed ({reason}): {ex.Message}");
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref _state, 0);
+                    lock (SyncGate)
+                    {
+                        _syncRunning = false;
+                        _syncRequested = false;
+                    }
                 }
             });
         }

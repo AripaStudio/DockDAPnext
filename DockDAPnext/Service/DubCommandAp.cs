@@ -14,19 +14,7 @@ namespace DockDAPnext.Service
         public static async Task<DubBuildResult> BuildDubAsync(string workingDirectory, string arguments)
         {
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            OutputWindowPane dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAp.DubManagerPaneGuid);
-
-            if (dubPane == null)
-            {
-                // GetOutputWindowPaneAsync(guid) can only LOOK UP a custom pane: it builds the
-                // wrapper with an empty pane name, so IVsOutputWindow.CreatePane is skipped and
-                // GetPane fails (null) the first time in a session. Create the pane ourselves,
-                // then retry the lookup.
-                await CreateDubManagerPaneAsync();
-                dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAp.DubManagerPaneGuid);
-            }
+            OutputWindowPane dubPane = await GetOrCreatePaneAsync();
 
             if (dubPane == null)
             {
@@ -101,6 +89,44 @@ namespace DockDAPnext.Service
                 await dubPane.WriteLineAsync($"[DOCKDAP] failed to run dub: {e.Message}");
                 return DubBuildResult.NotStarted($"Could not run dub.exe: {e.Message}");
             }
+        }
+
+        // A message that never starts a process (the pre-build checks) still belongs in the
+        // pane the failure message points at; best effort - a pane that cannot be reached
+        // must not turn a diagnosis into an error of its own.
+        public static async Task WriteToPaneAsync(string message)
+        {
+            try
+            {
+                var pane = await GetOrCreatePaneAsync();
+                if (pane != null)
+                {
+                    await pane.WriteLineAsync("[DOCKDAP] " + message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[DOCKDAP] pane write failed: " + ex.Message);
+            }
+        }
+
+        // Looks the 'Dub Manager' pane up, creating it on the first use of a session:
+        // GetOutputWindowPaneAsync(guid) can only LOOK UP a custom pane, it builds the
+        // wrapper with an empty pane name, so IVsOutputWindow.CreatePane is skipped and
+        // GetPane fails (null) until the pane exists.
+        private static async Task<OutputWindowPane> GetOrCreatePaneAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            OutputWindowPane dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAp.DubManagerPaneGuid);
+
+            if (dubPane == null)
+            {
+                await CreateDubManagerPaneAsync();
+                dubPane = await VS.Windows.GetOutputWindowPaneAsync(GuidDubAp.DubManagerPaneGuid);
+            }
+
+            return dubPane;
         }
 
         // Streams one child-process output pipe into the Output pane, line by line.

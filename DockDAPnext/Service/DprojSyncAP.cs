@@ -7,8 +7,7 @@ using System.Xml.Linq;
 
 namespace DockDAPnext.Service
 {
-    // Keeps dub.json "sourceFiles" in sync with the compiled .d files declared by the
-    // active VisualD project (.visualdproj). First step towards MSBuild-style sync.
+    // Keeps dub.json "sourceFiles" in sync with the .d files the D project file declares.
     public class DprojSyncAp
     {
         private readonly DubManagerAp _dubManager;
@@ -20,17 +19,32 @@ namespace DockDAPnext.Service
 
         public async Task<DprojSyncResult> SyncAsync()
         {
-            var activeProject = await VS.Solutions.GetActiveProjectAsync();
-            if (activeProject == null || string.IsNullOrEmpty(activeProject.FullPath))
+            // The selector wins: the active project in Solution Explorer is often not the one being edited.
+            var selected = CurrentDubFileConfigAp.SelectedProject;
+            var dprojPath = selected != null && SolutionProjectsAp.IsDProject(selected.DprojPath)
+                ? selected.DprojPath
+                : null;
+
+            if (!string.IsNullOrEmpty(dprojPath) && !File.Exists(dprojPath))
             {
-                return Fail("No active project is selected in Solution Explorer.");
+                return Fail($"The project file of '{selected.Name}' does not exist: {dprojPath}");
             }
 
-            var dprojPath = activeProject.FullPath;
-            var extension = Path.GetExtension(dprojPath)?.ToLowerInvariant();
-            if (extension != ".visualdproj" && extension != ".dproj")
+            if (string.IsNullOrEmpty(dprojPath))
             {
-                return Fail($"The active project is not a D project (.visualdproj / .dproj): {Path.GetFileName(dprojPath)}");
+                var activeProject = await VS.Solutions.GetActiveProjectAsync();
+                if (activeProject == null || string.IsNullOrEmpty(activeProject.FullPath))
+                {
+                    return Fail("No active project is selected in Solution Explorer.");
+                }
+
+                if (!SolutionProjectsAp.IsDProject(activeProject.FullPath))
+                {
+                    return Fail("The active project is not a D project (.visualdproj / .dproj): "
+                        + Path.GetFileName(activeProject.FullPath));
+                }
+
+                dprojPath = activeProject.FullPath;
             }
 
             var found = await _dubManager.FindDubFileApAsync();
@@ -41,8 +55,7 @@ namespace DockDAPnext.Service
 
             var dubJsonPath = found.Value;
 
-            // Reuse the in-memory config when the tool already loaded one so unsaved edits
-            // survive; otherwise read dub.json from disk.
+            // Reuse the loaded config so unsaved edits survive; otherwise read from disk.
             var config = CurrentDubFileConfigAp.CurrentDubConfigAp;
             if (config == null)
             {
@@ -91,22 +104,22 @@ namespace DockDAPnext.Service
             }
 
             config.SourceFiles = projectFiles;
-            if (!_dubManager.SaveFileDubAp(dubJsonPath, config))
+            var saved = _dubManager.SaveFileDubAp(dubJsonPath, config);
+            if (!saved.IsSuccess)
             {
                 result.Success = false;
-                result.ErrorMessage =
-                    $"sourceFiles was updated in memory but {Path.GetFileName(dubJsonPath)} could not be written to disk.";
+                result.ErrorMessage = $"sourceFiles was updated in memory but {saved.Message}";
             }
 
             return result;
         }
 
-        // Extracts every <File path="...d" /> entry (nested under <Folder>) from the project
-        // XML and returns it as a path relative to the dub.json folder, '/' separated.
+        // Collects every <File path="...d" /> entry as a path relative to the dub.json folder.
         public static List<string> ReadSourceFiles(string dprojPath, string baseDirectory)
         {
             var document = XDocument.Load(dprojPath);
             var files = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var element in document.Descendants().Where(e => e.Name.LocalName == "File"))
             {
@@ -125,14 +138,18 @@ namespace DockDAPnext.Service
                     ? Path.GetFullPath(rawPath)
                     : Path.GetFullPath(Path.Combine(baseDirectory, rawPath.Replace('/', Path.DirectorySeparatorChar)));
 
-                files.Add(PathHelperAp.MakeRelative(baseDirectory, fullPath));
+                // dub compiles every entry, so the same file listed twice must land once.
+                var relative = PathHelperAp.MakeRelative(baseDirectory, fullPath);
+                if (seen.Add(relative))
+                {
+                    files.Add(relative);
+                }
             }
 
             return files;
         }
 
-        // Case-insensitive equality ignores 'foo.d' vs 'FOO.D' but also means we rewrite
-        // nothing when only formatting (absolute vs relative) differs.
+        // Case-insensitive equality avoids rewriting the list when only the formatting differs.
         private static string NormalizeEntry(string path, string baseDirectory)
         {
             if (string.IsNullOrWhiteSpace(path))

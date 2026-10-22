@@ -11,5 +11,7 @@ namespace DockDAPnext.Service
     {
         public static DubConfigAp CurrentDubConfigAp { get; set; }
 
+        // The project picked in the selector: while set, every lookup uses its dub.json.
+        public static SolutionDubProject SelectedProject { get; set; }
     }
 }

@@ -3,8 +3,8 @@ using System;
 
 namespace DockDAPnext.Service
 {
-    // The standard result of every service operation (AI_Rules 17): success flag, value,
-    // error and message travel together, so a method never signals failure with null.
+    // The standard result of every service operation: success flag, value, error
+    // and message travel together, so a method never signals failure with null.
     public class OperationResult<T>
     {
         public bool IsSuccess { get; init; }

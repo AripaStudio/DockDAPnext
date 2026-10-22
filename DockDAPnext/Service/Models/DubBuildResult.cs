@@ -16,6 +16,10 @@ namespace DockDAPnext.Service
         // (its targetPath, the package targetPath, or the dub.json folder).
         public string OutputDirectory { get; set; }
 
+        // targetType of the on-disk dub.json this build ran against: the caller asks this
+        // instead of the in-memory twin, which may have drifted (edited file, other project).
+        public string TargetType { get; set; }
+
         public bool Success => Started && ExitCode == 0;
 
         public static DubBuildResult NotStarted(string reason) =>

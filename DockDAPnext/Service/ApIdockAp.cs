@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,15 +14,49 @@ namespace DockDAPnext.Service
     {
         private readonly DubManagerAp _dubManagerAp;
         private readonly DprojSyncAp _dprojSyncAp;
+        private readonly SolutionProjectsAp _solutionProjectsAp;
 
         public ApIdockAp()
         {
             _dubManagerAp = new DubManagerAp();
             _dprojSyncAp = new DprojSyncAp(_dubManagerAp);
+            _solutionProjectsAp = new SolutionProjectsAp();
+        }
+
+        public Task<List<SolutionDubProject>> GetSolutionProjectsApAsync()
+        {
+            return _solutionProjectsAp.DiscoverApAsync();
+        }
+
+        // Switching project in the selector: the choice is stored before the file is read,
+        // so a failed load still leaves the tool window pointed at the project the user
+        // chose (and the message names that project).
+        public Task<OperationResult<DubConfigAp>> SelectDubProjectApAsync(SolutionDubProject project)
+        {
+            if (project == null || string.IsNullOrEmpty(project.Directory))
+            {
+                return Task.FromResult(OperationResult<DubConfigAp>.Fail("No solution project was selected."));
+            }
+
+            CurrentDubFileConfigAp.SelectedProject = project;
+
+            if (!project.HasDubJson)
+            {
+                return Task.FromResult(OperationResult<DubConfigAp>.Fail(
+                    $"{project.Name} has no dub.json yet; 'Create or load File' creates it in {project.Directory}."));
+            }
+
+            return Task.FromResult(_dubManagerAp.EnsureDebugReleaseConfigurationsAp(project.DubJsonPath));
         }
 
         public async Task<OperationResult<DubConfigAp>> CreateOrLoadDubFileApAsync()
         {
+            var selected = CurrentDubFileConfigAp.SelectedProject;
+            if (selected != null && !string.IsNullOrEmpty(selected.Directory))
+            {
+                return CreateOrLoadForSelectedProjectAp(selected);
+            }
+
             var found = await _dubManagerAp.FindDubFileApAsync();
             if (found.IsSuccess)
             {
@@ -43,6 +78,28 @@ namespace DockDAPnext.Service
             string newFilePath = Path.Combine(projectDirectory, "dub.json");
 
             return _dubManagerAp.CreateDubFileWithDefaultsAp(newFilePath);
+        }
+
+        // Creation follows the selection too: an existing file is upgraded, a missing one is
+        // written into the selected project's folder instead of the active project's.
+        private OperationResult<DubConfigAp> CreateOrLoadForSelectedProjectAp(SolutionDubProject selected)
+        {
+            var dubFilePath = selected.HasDubJson
+                ? selected.DubJsonPath
+                : Path.Combine(selected.Directory, "dub.json");
+
+            if (File.Exists(dubFilePath))
+            {
+                return _dubManagerAp.EnsureDebugReleaseConfigurationsAp(dubFilePath);
+            }
+
+            var created = _dubManagerAp.CreateDubFileWithDefaultsAp(dubFilePath);
+            if (created.IsSuccess)
+            {
+                selected.DubJsonPath = dubFilePath;
+            }
+
+            return created;
         }
 
         // Locates the on-disk dub.json (no creation): the AI tab merges a confirmed
@@ -87,7 +144,15 @@ namespace DockDAPnext.Service
                 return DubBuildResult.NotStarted($"Could not resolve the folder that holds {dubFilePath}.");
             }
 
-            var config = _dubManagerAp.ReadDubFileAp(dubFilePath).Value;
+            // A file that cannot be parsed is named here; falling back to a plain 'dub build'
+            // would move the output to an unexpected folder and blame dub for our file.
+            var read = _dubManagerAp.ReadDubFileAp(dubFilePath);
+            if (!read.IsSuccess)
+            {
+                return DubBuildResult.NotStarted(read.Message);
+            }
+
+            var config = read.Value;
 
             // Select the matching configuration so its targetPath decides where the
             // binary lands. Files without such a configuration (hand-written or from
@@ -101,9 +166,22 @@ namespace DockDAPnext.Service
                     : " --config=" + configuration.Name;
             }
 
+            // A package without a single compilable file makes dub give up with a bare exit
+            // code 2 whose details only reach the output pane. Refuse the run earlier and say
+            // what is missing, so the user is not sent to a pane to decode dub's silence.
+            var noSourceFiles = SourceFileProbeAp.ExplainNoSourceFiles(workingDirectory, config, configuration);
+            if (noSourceFiles != null)
+            {
+                await DubCommandAp.WriteToPaneAsync(noSourceFiles);
+                var refused = DubBuildResult.NotStarted(noSourceFiles);
+                refused.TargetType = config?.TargetType;
+                return refused;
+            }
+
             var result = await DubCommandAp.BuildDubAsync(workingDirectory, arguments);
             result.WorkingDirectory = workingDirectory;
             result.OutputDirectory = ResolveOutputDirectory(workingDirectory, config, configuration);
+            result.TargetType = config?.TargetType;
             return result;
         }
 
@@ -123,7 +201,9 @@ namespace DockDAPnext.Service
                 return Path.GetFullPath(Path.Combine(
                     workingDirectory, targetPath.Replace('/', Path.DirectorySeparatorChar)));
             }
-            catch (ArgumentException)
+            catch (Exception ex) when (
+                ex is ArgumentException || ex is NotSupportedException ||
+                ex is IOException || ex is System.Security.SecurityException)
             {
                 return workingDirectory;
             }
@@ -221,12 +301,12 @@ namespace DockDAPnext.Service
             return OperationResult<string>.Ok(found.Value, $"Opened {found.Value}.");
         }
 
-        public async Task<bool> SaveFileApAsync(DubConfigAp dubConfigAp)
+        public async Task<OperationResult<string>> SaveFileApAsync(DubConfigAp dubConfigAp)
         {
             var found = await _dubManagerAp.FindDubFileApAsync();
             if (!found.IsSuccess)
             {
-                return false;
+                return OperationResult<string>.Fail(found.Message, found.Exception);
             }
 
             return _dubManagerAp.SaveFileDubAp(found.Value, dubConfigAp);

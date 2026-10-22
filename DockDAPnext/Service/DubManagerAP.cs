@@ -1,6 +1,7 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Project = Community.VisualStudio.Toolkit.Project;
@@ -16,8 +17,23 @@ namespace DockDAPnext.Service
 
         public async System.Threading.Tasks.Task<OperationResult<string>> FindDubFileApAsync()
         {
-            // Active project first: in a multi-project solution the first dub.json found
-            // by walking every project in arbitrary order belongs to the wrong project.
+            // An explicit selection wins over every heuristic: the user decides the managed file.
+            var selected = CurrentDubFileConfigAp.SelectedProject;
+            if (selected != null && !string.IsNullOrEmpty(selected.Directory))
+            {
+                var selectedDubFile = FindDubJsonInDirectory(selected.Directory);
+                if (selectedDubFile != null)
+                {
+                    return OperationResult<string>.Ok(selectedDubFile);
+                }
+
+                // Loud, not silent: searching other projects here would edit the wrong file.
+                return OperationResult<string>.Fail(
+                    $"The selected project '{selected.Name}' has no dub.json in {selected.Directory}. "
+                    + "Use 'Create or load File' to create it there.");
+            }
+
+            // Without a selection: active project first, because the first file found at random is often wrong.
             var activeProject = await VS.Solutions.GetActiveProjectAsync();
             var activeDubFile = FindDubJsonInDirectory(GetProjectDirectory(activeProject));
             if (activeDubFile != null)
@@ -57,7 +73,7 @@ namespace DockDAPnext.Service
             }
         }
 
-        private static string FindDubJsonInDirectory(string rootPath)
+        internal static string FindDubJsonInDirectory(string rootPath)
         {
             if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
             {
@@ -99,9 +115,10 @@ namespace DockDAPnext.Service
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // inaccessible or malformed path: skip this branch, keep searching
+                // Inaccessible or malformed branch: skip it, but say so instead of failing silently.
+                Debug.WriteLine($"[DOCKDAP] dub.json search skipped {currentDirectory}: {ex.Message}");
             }
 
             return null;
@@ -141,6 +158,11 @@ namespace DockDAPnext.Service
             catch (IOException ex)
             {
                 return OperationResult<DubConfigAp>.Fail($"dub.json could not be read: {path} ({ex.Message})", ex);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
+            {
+                // Access denied is a result, not an exception to throw across the service boundary.
+                return OperationResult<DubConfigAp>.Fail($"dub.json could not be read (access denied): {path} ({ex.Message})", ex);
             }
         }
 
@@ -221,44 +243,91 @@ namespace DockDAPnext.Service
                 },
             };
 
-            try
+            var written = WriteAllTextAtomic(path, JsonConvert.SerializeObject(config, SerializerSettings()));
+            if (!written.IsSuccess)
             {
-                File.WriteAllText(path, JsonConvert.SerializeObject(config, SerializerSettings()));
-            }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-            {
-                return OperationResult<DubConfigAp>.Fail($"dub.json could not be written: {path} ({ex.Message})", ex);
+                return OperationResult<DubConfigAp>.Fail($"dub.json could not be written: {written.Message}", written.Exception);
             }
 
             return OperationResult<DubConfigAp>.Ok(config,
                 $"dub.json created at {path}; Output folders created at {folders.Value.OutputDirectoryInfo.FullName}");
         }
 
-        public bool SaveFileDubAp(string path, DubConfigAp inputConfigAp)
+        public OperationResult<string> SaveFileDubAp(string path, DubConfigAp inputConfigAp)
         {
             if (string.IsNullOrEmpty(path))
             {
-                return false;
+                return OperationResult<string>.Fail("No dub.json path was given.");
+            }
+
+            // A null model would serialize to the literal 'null' and wipe the file.
+            if (inputConfigAp == null)
+            {
+                return OperationResult<string>.Fail($"Nothing was saved: the in-memory twin of {path} is empty.");
             }
 
             if (!File.Exists(path))
             {
-                return false;
+                return OperationResult<string>.Fail($"dub.json does not exist (any more): {path}");
             }
+
+            string jsonString;
+            try
+            {
+                jsonString = JsonConvert.SerializeObject(inputConfigAp, SerializerSettings());
+            }
+            catch (Exception ex) when (ex is JsonException || ex is InvalidOperationException)
+            {
+                return OperationResult<string>.Fail($"dub.json could not be serialized: {path} ({ex.Message})", ex);
+            }
+
+            return WriteAllTextAtomic(path, jsonString);
+        }
+
+        // Temp file + replace: auto-sync writes on a worker thread while a reader may load the
+        // file, so a half-written or torn dub.json must never be observable on disk.
+        private static OperationResult<string> WriteAllTextAtomic(string path, string contents)
+        {
+            var tempPath = path + ".tmp-" + Guid.NewGuid().ToString("N");
 
             try
             {
-                var jsonString = JsonConvert.SerializeObject(inputConfigAp, SerializerSettings());
-                System.IO.File.WriteAllText(path, jsonString);
-                return true;
+                File.WriteAllText(tempPath, contents);
+
+                if (File.Exists(path))
+                {
+                    File.Replace(tempPath, path, null);
+                }
+                else
+                {
+                    File.Move(tempPath, path);
+                }
+
+                return OperationResult<string>.Ok(path);
             }
-            catch (IOException)
+            catch (Exception ex) when (
+                ex is IOException || ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
             {
-                return false;
+                return OperationResult<string>.Fail($"{path} could not be written: {ex.Message}", ex);
             }
-            catch (UnauthorizedAccessException)
+            finally
             {
-                return false;
+                TryDelete(tempPath);
+            }
+        }
+
+        private static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Best effort: a leftover temp file must not hide the real write result.
             }
         }
 
