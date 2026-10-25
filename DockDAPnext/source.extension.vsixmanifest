@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="DockDAPnext.9893225d-605a-42c9-8c81-09cd89f8b038" Version="2.0.1" Language="en-US" Publisher="AripaStudio" />
+        <Identity Id="DockDAPnext.9893225d-605a-42c9-8c81-09cd89f8b038" Version="2.0.4" Language="en-US" Publisher="AripaStudio" />
         <DisplayName>DockDAPnext</DisplayName>
         <Description xml:space="preserve">A Dub Manager Extensions by Aripa Pars Studio (Khashayar Mobasheri - abolfazl). Method: Go to the Tools section and click on the OpenDubDAP button. A window will open next to your solution, from where you can manage it. Feedback is appreciated. Thank you, AripaPars Studio.</Description>
         <MoreInfo>https://github.com/AripaStudio/DockDAPnext</MoreInfo>

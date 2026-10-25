@@ -12,7 +12,7 @@ namespace DockDAPnext
         public const string Name = "DockDAPnext";
         public const string Description = "A Dub Manager Extensions by Aripa Pars Studio (Khashayar Mobasheri - abolfazl). Method: Go to the Tools section and click on the OpenDubDAP button. A window will open next to your solution, from where you can manage it. Feedback is appreciated. Thank you, AripaPars Studio.";
         public const string Language = "en-US";
-        public const string Version = "2.0.1";
+        public const string Version = "2.0.4";
         public const string Author = "AripaStudio";
         public const string Tags = "Dub , Dlang , AripaStudio , AripaParsStudio , AtraAripaStudio , Extension";
         public const bool IsPreview = false;

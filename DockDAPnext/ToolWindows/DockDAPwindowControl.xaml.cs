@@ -20,7 +20,7 @@ namespace DockDAPnext
             this.Loaded += OnControlLoaded;
         }
 
-        // Read the list once when the window opens; the Refresh button covers later solution changes.
+        // Fill the selector only. Loading waits for the user to pick a project and press Refresh.
         private void OnControlLoaded(object sender, RoutedEventArgs e)
         {
             this.Loaded -= OnControlLoaded;

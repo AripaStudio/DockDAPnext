@@ -364,6 +364,13 @@ FodyWeavers.xsd
 
 
 PROJECT_MAP.md
+
+# Built extension packages
+*.vsix
+
+# ILRepack scratch files (extracted resources and merge list) written next to the project
+ILRepack.List
+*.resources
 /DockDAPnext/.freebuff
 /DockDAPnext/AlgorithmStep.html
 Other/

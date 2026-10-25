@@ -33,9 +33,10 @@ namespace DockDAPnext.ViewModels
 
                 this.RaiseAndSetIfChanged(ref _selectedSolutionProject, value);
 
+                // Selecting only announces the choice: Refresh is the single load trigger.
                 if (!_suppressProjectReload && value != null)
                 {
-                    _ = LoadSelectedProjectAsync(value);
+                    SelectedProjectStatus = "Press Refresh to load " + value.DisplayName + ".";
                 }
             }
         }
@@ -50,10 +51,23 @@ namespace DockDAPnext.ViewModels
 
         private void InitializeSolutionProjects()
         {
-            ButtonCommandRefreshProjects = Guard(ReactiveCommand.CreateFromTask(RefreshSolutionProjectsAsync));
+            ButtonCommandRefreshProjects = Guard(ReactiveCommand.CreateFromTask(RefreshAndLoadSelectedProjectAsync));
         }
 
-        // Rebuilds the list and keeps the current choice; populating never loads or writes any dub.json.
+        // Refresh re-reads the solution and loads the selected project; the selection itself never loads.
+        public async Task RefreshAndLoadSelectedProjectAsync()
+        {
+            await RefreshSolutionProjectsAsync();
+
+            if (SelectedSolutionProject == null)
+            {
+                return;
+            }
+
+            await LoadProjectAsync(SelectedSolutionProject);
+        }
+
+        // Rebuilds the list only and keeps a matching choice; no project is loaded here.
         public async Task RefreshSolutionProjectsAsync()
         {
             try
@@ -68,16 +82,14 @@ namespace DockDAPnext.ViewModels
                     SolutionProjects.Add(project);
                 }
 
-                var target = discovered.FirstOrDefault(p => previous != null
-                                                            && SolutionProjectsAp.SameDirectory(p.Directory, previous.Directory))
-                             ?? discovered.FirstOrDefault(p => p.HasDubJson)
-                             ?? discovered.FirstOrDefault();
+                var target = previous == null
+                    ? null
+                    : discovered.FirstOrDefault(p => SolutionProjectsAp.SameDirectory(p.Directory, previous.Directory));
 
-                _suppressProjectReload = false;
-
-                if (target == null)
+                if (target == null && discovered.Count == 0)
                 {
                     SelectedSolutionProject = null;
+                    _suppressProjectReload = false;
 
                     // The solution was closed or emptied: the tabs must not keep an orphaned file.
                     CurrentDubFileConfigAp.SelectedProject = null;
@@ -87,10 +99,17 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                // The status is claimed before the setter starts the load; the load itself
-                // writes the final line, so a fast load cannot be overwritten by this method.
-                SelectedProjectStatus = "Loading " + target.DisplayName + "...";
                 SelectedSolutionProject = target;
+                _suppressProjectReload = false;
+
+                if (target == null)
+                {
+                    SelectedProjectStatus = "Select a D project, then press Refresh.";
+                }
+                else if (CurrentDubFileConfigAp.CurrentDubConfigAp == null)
+                {
+                    SelectedProjectStatus = "Press Refresh to load " + target.DisplayName + ".";
+                }
             }
             catch (Exception ex)
             {
@@ -99,7 +118,8 @@ namespace DockDAPnext.ViewModels
             }
         }
 
-        private async Task LoadSelectedProjectAsync(SolutionDubProject project)
+        // The single load entry point: the Refresh command and the console probes both use it.
+        public async Task LoadProjectAsync(SolutionDubProject project)
         {
             var generation = ++_loadGeneration;
 
