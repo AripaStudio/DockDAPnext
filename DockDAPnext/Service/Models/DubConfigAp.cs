@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace DockDAPnext.Service
 {
@@ -22,7 +23,7 @@ namespace DockDAPnext.Service
         [JsonProperty("sourceFiles")] public List<string> SourceFiles { get; set; } = new List<string>();
 
         [JsonProperty("dependencies")]
-        public Dictionary<string, string> Dependencies { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, JToken> Dependencies { get; set; } = new Dictionary<string, JToken>();
 
         // dub's real recipe field is 'configurations' (chosen with --config=...). Older
         // versions of this extension wrote 'buildConfigurations', a key dub ignores;
