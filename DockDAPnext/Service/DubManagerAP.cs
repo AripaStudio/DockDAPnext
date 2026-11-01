@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.RightsManagement;
+using DockDAPnext.Service.Models;
+using Newtonsoft.Json.Linq;
 using Project = Community.VisualStudio.Toolkit.Project;
 
 namespace DockDAPnext.Service
@@ -152,8 +155,10 @@ namespace DockDAPnext.Service
             catch (JsonException ex)
             {
                 // Broken JSON must not reach the ViewModel: it used to crash devenv.
+                //return OperationResult<DubConfigAp>.Fail(
+                //    $"dub.json is not valid JSON, so it was left untouched: {path} ({ex.Message})", ex);
                 return OperationResult<DubConfigAp>.Fail(
-                    $"dub.json is not valid JSON, so it was left untouched: {path} ({ex.Message})", ex);
+                    $"dub.json could not be mapped to the model (unsupported dependency format?): {path} ({ex.Message})", ex);
             }
             catch (IOException ex)
             {
@@ -165,6 +170,8 @@ namespace DockDAPnext.Service
                 return OperationResult<DubConfigAp>.Fail($"dub.json could not be read (access denied): {path} ({ex.Message})", ex);
             }
         }
+
+      
 
         // Files written by older versions stored the list under 'buildConfigurations',
         // a key dub ignores, so their flags and options never reached a build. Move that
@@ -338,5 +345,127 @@ namespace DockDAPnext.Service
             Formatting = Formatting.Indented,
             NullValueHandling = NullValueHandling.Ignore
         };
+
+      
+
+        // The inverse of ParseDependency: turns the editor's fields into the exact JSON
+        // value dub expects, rejecting an incomplete shape before it reaches dub.json.
+        public static OperationResult<JToken> CreateDependencyToken(DubDependencyInfo dependency)
+        {
+            if (dependency == null)
+            {
+                return OperationResult<JToken>.Fail("No dependency was given.");
+            }
+
+            var name = dependency.Name?.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                return OperationResult<JToken>.Fail("The dependency name is empty.");
+            }
+
+            switch (dependency.Kind)
+            {
+                case DependencyKind.Registry:
+                    if (string.IsNullOrWhiteSpace(dependency.Version))
+                    {
+                        return OperationResult<JToken>.Fail(
+                            $"Dependency '{name}' needs a registry version range (for example ~>1.0.0).");
+                    }
+
+                    return OperationResult<JToken>.Ok(new JValue(dependency.Version.Trim()));
+
+                case DependencyKind.Git:
+                    if (string.IsNullOrWhiteSpace(dependency.Repository))
+                    {
+                        return OperationResult<JToken>.Fail($"Dependency '{name}' needs a git repository URL.");
+                    }
+
+                    var git = new JObject { ["repository"] = dependency.Repository.Trim() };
+                    if (!string.IsNullOrWhiteSpace(dependency.Version))
+                    {
+                        git["version"] = dependency.Version.Trim();
+                    }
+
+                    return OperationResult<JToken>.Ok(git);
+
+                case DependencyKind.Path:
+                    if (string.IsNullOrWhiteSpace(dependency.Path))
+                    {
+                        return OperationResult<JToken>.Fail($"Dependency '{name}' needs a local folder path.");
+                    }
+
+                    var local = new JObject { ["path"] = dependency.Path.Trim() };
+                    if (!string.IsNullOrWhiteSpace(dependency.Version))
+                    {
+                        local["version"] = dependency.Version.Trim();
+                    }
+
+                    return OperationResult<JToken>.Ok(local);
+
+                default:
+                    return OperationResult<JToken>.Fail(
+                        $"Dependency '{name}' uses an unsupported shape. Choose Registry, Git or Path first.");
+            }
+        }
+
+        public static OperationResult<DubDependencyInfo> ParseDependency(string name, JToken? token)
+        {
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return OperationResult<DubDependencyInfo>.Fail($"Dependency '{name}' has no value.");
+            }
+
+            // "vibe-d": "~>1.0.0"
+            if (token.Type == JTokenType.String)
+            {
+                var registry = new DubDependencyInfo
+                {
+                    Name = name,
+                    Kind = DependencyKind.Registry,
+                    Version = token.Value<string>()
+                };
+                return OperationResult<DubDependencyInfo>.Ok(registry);
+            }
+
+            // "jsondap": { "repository": "...", "version": "..." } or { "path": "..." }
+            if (token.Type == JTokenType.Object)
+            {
+                var obj = (JObject)token;
+                string? repository = obj.Value<string>("repository");
+                string? path = obj.Value<string>("path");
+                string? version = obj.Value<string>("version");
+
+                if (repository != null)
+                {
+                    var git = new DubDependencyInfo
+                    {
+                        Name = name,
+                        Kind = DependencyKind.Git,
+                        Repository = repository,
+                        Version = version
+                    };
+                    return OperationResult<DubDependencyInfo>.Ok(git, "the dependency is git");
+                }
+
+                if (path != null)
+                {
+                    var local = new DubDependencyInfo
+                    {
+                        Name = name,
+                        Kind = DependencyKind.Path,
+                        Path = path,
+                        Version = version
+                    };
+                    return OperationResult<DubDependencyInfo>.Ok(local, "the dependency is path");
+                }
+
+                return OperationResult<DubDependencyInfo>.Fail(
+                    $"Dependency '{name}' is an object without 'repository' or 'path'.");
+            }
+
+            return OperationResult<DubDependencyInfo>.Fail(
+                $"Dependency '{name}' has an unsupported format: {token.Type}.");
+        }
     }
+
 }
