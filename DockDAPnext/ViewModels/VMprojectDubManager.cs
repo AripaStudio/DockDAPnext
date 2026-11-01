@@ -1,10 +1,14 @@
 ﻿using DockDAPnext.Service;
+using DockDAPnext.Service.InterFaces;
+using DockDAPnext.Service.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
-using DockDAPnext.Service.InterFaces;
 
 namespace DockDAPnext.ViewModels
 {
@@ -96,8 +100,10 @@ namespace DockDAPnext.ViewModels
             }
 
             AuthorsList = new ObservableCollection<string>(config.Authors);
-            DependenciesListCollection = new ObservableCollection<string>(
-                config.Dependencies.Select(d => $"{d.Key}: {d.Value}"));
+            DependenciesListCollection = new ObservableCollection<DubDependencyInfo>(
+                config.Dependencies.Select(CreateDependencyRow));
+            SelectedDependencyRemove = null;
+            ResetDependencyEditor();
             SourceFilePathListCollection = new ObservableCollection<string>(config.SourceFiles);
             NameConfigListCollection = new ObservableCollection<string>(
                 config.BuildConfigurations.Select(c => c.Name));
@@ -146,10 +152,29 @@ namespace DockDAPnext.ViewModels
                     configuration.OtherDataBuildConfiguration.Select(d => new Tuple<string, string>(d.Key, d.Value?.ToString())));
         }
 
+        // Load-time adapter from dub.json tokens to editable rows: unsupported shapes stay
+        // visible with their raw JSON so nothing silently disappears from the list.
+        private static DubDependencyInfo CreateDependencyRow(KeyValuePair<string, JToken> dependency)
+        {
+            var parsed = DubManagerAp.ParseDependency(dependency.Key, dependency.Value);
+            if (parsed.IsSuccess)
+            {
+                return parsed.Value;
+            }
+
+            Debug.WriteLine($"[DOCKDAP] dependency '{dependency.Key}' cannot be edited: {parsed.Message}");
+            return new DubDependencyInfo
+            {
+                Name = dependency.Key,
+                Kind = DependencyKind.Unsupported,
+                RawJson = dependency.Value == null ? "null" : dependency.Value.ToString(Formatting.None)
+            };
+        }
+
         private static void Normalize(DubConfigAp config)
         {
             config.Authors = config.Authors ?? new List<string>();
-            config.Dependencies = config.Dependencies ?? new Dictionary<string, string>();
+            config.Dependencies = config.Dependencies ?? new Dictionary<string, JToken>();
             config.SourceFiles = config.SourceFiles ?? new List<string>();
             config.BuildConfigurations = config.BuildConfigurations ?? new List<BuildConfiguration>();
             config.OtherData = config.OtherData ?? new Dictionary<string, object>();
@@ -164,6 +189,8 @@ namespace DockDAPnext.ViewModels
                 configuration.Name = configuration.Name ?? string.Empty;
             }
         }
+
+       
 
         // Applies a successful source sync to the shared config and refreshes the list UI.
         public void ApplySyncResult(DprojSyncResult result)

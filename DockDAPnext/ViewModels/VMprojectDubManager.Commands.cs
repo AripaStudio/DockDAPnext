@@ -1,4 +1,5 @@
 using DockDAPnext.Service;
+using DockDAPnext.Service.Models;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -134,7 +135,7 @@ namespace DockDAPnext.ViewModels
                 AuthorsList.Remove(SelectedAuthor);
             }));
 
-            // Dependencies
+            // Dependencies: one upsert that covers all three dub shapes (registry / git / path).
             ButtonCommandAddDependency = Guard(ReactiveCommand.Create(() =>
             {
                 if (!EnsureConfigLoaded())
@@ -142,33 +143,48 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(TxtAddDependencyKey) || string.IsNullOrWhiteSpace(TxtAddDependencyValue))
+                var name = (TxtDependencyName ?? string.Empty).Trim();
+                if (string.IsNullOrEmpty(name))
                 {
-                    ShowWarning("Dependency name or value is empty.");
+                    ShowWarning("Dependency name is empty.");
                     return;
                 }
 
-                var key = TxtAddDependencyKey.Trim();
-                var value = TxtAddDependencyValue.Trim();
-                var existingKey = CurrentConfig.Dependencies.Keys.FirstOrDefault(
-                    k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
-                var actualKey = existingKey ?? key;
-
-                CurrentConfig.Dependencies[actualKey] = value;
-
-                // Replacing the row keeps the list in step with the dictionary; appending
-                // it again used to show a second line for a package that has one entry.
-                var oldLine = DependenciesListCollection.FirstOrDefault(d => string.Equals(
-                    DependencyKeyOf(d), actualKey, StringComparison.OrdinalIgnoreCase));
-                if (oldLine == null)
+                var dependency = new DubDependencyInfo
                 {
-                    DependenciesListCollection.Add(DependencyLine(actualKey, value));
+                    Name = name,
+                    Kind = SelectedDependencyKind,
+                    Version = CleanDependencyField(TxtDependencyVersion),
+                    Repository = CleanDependencyField(TxtDependencyRepository),
+                    Path = CleanDependencyField(TxtDependencyPath),
+                };
+
+                var token = DubManagerAp.CreateDependencyToken(dependency);
+                if (!token.IsSuccess)
+                {
+                    ShowWarning(token.Message);
+                    return;
+                }
+
+                var existingKey = CurrentConfig.Dependencies.Keys.FirstOrDefault(
+                    k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+                var actualKey = existingKey ?? name;
+                CurrentConfig.Dependencies[actualKey] = token.Value;
+
+                // Replacing the row keeps the list in step with the dictionary.
+                var row = dependency with { Name = actualKey };
+                var oldRow = DependenciesListCollection.FirstOrDefault(d => string.Equals(
+                    d.Name, actualKey, StringComparison.OrdinalIgnoreCase));
+                if (oldRow == null)
+                {
+                    DependenciesListCollection.Add(row);
                 }
                 else
                 {
-                    DependenciesListCollection[DependenciesListCollection.IndexOf(oldLine)] =
-                        DependencyLine(actualKey, value);
+                    DependenciesListCollection[DependenciesListCollection.IndexOf(oldRow)] = row;
                 }
+
+                SelectedDependencyRemove = row;
             }));
 
             ButtonCommandRemoveSelectedDependency = Guard(ReactiveCommand.Create(() =>
@@ -178,21 +194,22 @@ namespace DockDAPnext.ViewModels
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(SelectedDependencyRemove))
+                if (SelectedDependencyRemove == null)
                 {
                     ShowWarning("Select a dependency before removing it.");
                     return;
                 }
 
-                var keyToRemove = DependencyKeyOf(SelectedDependencyRemove);
+                var name = SelectedDependencyRemove.Name;
                 var existingKey = CurrentConfig.Dependencies.Keys.FirstOrDefault(
-                    k => string.Equals(k, keyToRemove, StringComparison.OrdinalIgnoreCase));
+                    k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
                 if (existingKey != null)
                 {
                     CurrentConfig.Dependencies.Remove(existingKey);
                 }
 
                 DependenciesListCollection.Remove(SelectedDependencyRemove);
+                SelectedDependencyRemove = null;
             }));
 
             // Source File
@@ -266,18 +283,8 @@ namespace DockDAPnext.ViewModels
             BuildOptions = new List<BuildOptionTypes>(),
         };
 
-        // One display format for a dependency row, so a lookup can find the row it must replace.
-        private static string DependencyLine(string key, string value) => key + ": " + value;
-
-        private static string DependencyKeyOf(string line)
-        {
-            if (string.IsNullOrEmpty(line))
-            {
-                return string.Empty;
-            }
-
-            var separator = line.IndexOf(": ", StringComparison.Ordinal);
-            return (separator < 0 ? line : line.Substring(0, separator)).Trim();
-        }
+        // An empty editor box means "no value", not an empty string in dub.json.
+        private static string CleanDependencyField(string value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

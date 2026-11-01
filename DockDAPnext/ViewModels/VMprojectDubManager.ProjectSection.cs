@@ -1,3 +1,4 @@
+using DockDAPnext.Service.Models;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -167,39 +168,129 @@ namespace DockDAPnext.ViewModels
 
         public ReactiveCommand<Unit, Unit> ButtonCommandRemoveSelectedDependency { get; private set; }
 
-
-        private string _txtAddDependencyKey;
-
-        public string TxtAddDependencyKey
+        // Unsupported is listed so a loaded entry can still be shown as what it is.
+        public List<DependencyKind> DependencyKindList { get; } = new List<DependencyKind>
         {
-            get => _txtAddDependencyKey;
-            set => this.RaiseAndSetIfChanged(ref _txtAddDependencyKey, value);
+            DependencyKind.Registry,
+            DependencyKind.Git,
+            DependencyKind.Path,
+            DependencyKind.Unsupported
+        };
+
+        private DependencyKind _selectedDependencyKind = DependencyKind.Registry;
+
+        // The editor swaps Repository/Path in and out of view and shows the JSON shape
+        // the current fields will produce, so each dub form is entered in its own way.
+        public DependencyKind SelectedDependencyKind
+        {
+            get => _selectedDependencyKind;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedDependencyKind, value);
+                this.RaisePropertyChanged(nameof(IsDependencyGit));
+                this.RaisePropertyChanged(nameof(IsDependencyPath));
+                this.RaisePropertyChanged(nameof(DependencyShapeHint));
+            }
         }
 
-        private string _txtAddDependencyValue;
+        public bool IsDependencyGit => _selectedDependencyKind == DependencyKind.Git;
 
-        public string TxtAddDependencyValue
+        public bool IsDependencyPath => _selectedDependencyKind == DependencyKind.Path;
+
+        public string DependencyShapeHint
         {
-            get => _txtAddDependencyValue;
-            set => this.RaiseAndSetIfChanged(ref _txtAddDependencyValue, value);
+            get
+            {
+                switch (_selectedDependencyKind)
+                {
+                    case DependencyKind.Git:
+                        return "\"package\": { \"repository\": \"git+https://…\", \"version\": \"v1.0.0\" }";
+                    case DependencyKind.Path:
+                        return "\"package\": { \"path\": \"assets/library\" }";
+                    case DependencyKind.Unsupported:
+                        return "Unsupported shape. Choose Registry, Git or Path to replace this entry.";
+                    default:
+                        return "\"package\": \"~>1.0.0\"";
+                }
+            }
         }
 
-        private ObservableCollection<string> _dependenciesListCollection = new ObservableCollection<string>();
+        private string _txtDependencyName;
 
-        public ObservableCollection<string> DependenciesListCollection
+        public string TxtDependencyName
+        {
+            get => _txtDependencyName;
+            set => this.RaiseAndSetIfChanged(ref _txtDependencyName, value);
+        }
+
+        private string _txtDependencyVersion;
+
+        public string TxtDependencyVersion
+        {
+            get => _txtDependencyVersion;
+            set => this.RaiseAndSetIfChanged(ref _txtDependencyVersion, value);
+        }
+
+        private string _txtDependencyRepository;
+
+        public string TxtDependencyRepository
+        {
+            get => _txtDependencyRepository;
+            set => this.RaiseAndSetIfChanged(ref _txtDependencyRepository, value);
+        }
+
+        private string _txtDependencyPath;
+
+        public string TxtDependencyPath
+        {
+            get => _txtDependencyPath;
+            set => this.RaiseAndSetIfChanged(ref _txtDependencyPath, value);
+        }
+
+        private ObservableCollection<DubDependencyInfo> _dependenciesListCollection = new ObservableCollection<DubDependencyInfo>();
+
+        public ObservableCollection<DubDependencyInfo> DependenciesListCollection
         {
             get => _dependenciesListCollection;
             set => this.RaiseAndSetIfChanged(ref _dependenciesListCollection, value);
         }
 
-        private string _selectedDependencyRemove;
+        private DubDependencyInfo _selectedDependencyRemove;
 
-        public string SelectedDependencyRemove
+        // Selecting a row loads it into the editor, which is how its kind becomes visible.
+        public DubDependencyInfo SelectedDependencyRemove
         {
             get => _selectedDependencyRemove;
-            set => this.RaiseAndSetIfChanged(ref _selectedDependencyRemove, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedDependencyRemove, value);
+                LoadDependencyEditor(value);
+            }
         }
 
+        private void LoadDependencyEditor(DubDependencyInfo dependency)
+        {
+            if (dependency == null)
+            {
+                ResetDependencyEditor();
+                return;
+            }
+
+            SelectedDependencyKind = dependency.Kind;
+            TxtDependencyName = dependency.Name;
+            TxtDependencyVersion = dependency.Version;
+            TxtDependencyRepository = dependency.Repository;
+            TxtDependencyPath = dependency.Path;
+        }
+
+        private void ResetDependencyEditor()
+        {
+            SelectedDependencyKind = DependencyKind.Registry;
+            TxtDependencyName = string.Empty;
+            TxtDependencyVersion = string.Empty;
+            TxtDependencyRepository = string.Empty;
+            TxtDependencyPath = string.Empty;
+        }
 
         #endregion
         #region sourceFile
