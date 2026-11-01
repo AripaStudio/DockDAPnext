@@ -7,12 +7,13 @@
              xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="800">
+             d:DesignHeight="620" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/DockDAPnext;component/Themes/UIStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -36,94 +37,145 @@
                 CornerRadius="4"
                 Padding="15">
 
-            <StackPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
 
-                <TextBlock Text="Add New Dependency (Key: Package Name, Value: Version)" 
-                           Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" 
-                           FontWeight="SemiBold" 
-                           Margin="0,0,0,10"
-                           FontSize="13"/>
+                <StackPanel>
 
-                <Grid Margin="0,5">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Add or update a dependency"
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,5"
+                               FontSize="13"/>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Key:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,0,5,5"/>
-                    <TextBox Grid.Row="0" Grid.Column="1"
-                             ToolTip="Enter the package name (e.g., vibe-d)"
-                            
-                            
-                            
-                            
-                             Padding="5"
-                             Margin="0,0,0,5"
-                             Text="{Binding VmProjectDubManager.TxtAddDependencyKey}"
-                             />
+                    <TextBlock Text="dub accepts a registry version, a git repository or a local folder. Pick the kind first; the fields and the JSON preview follow it. Select a row below to load it here."
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}"
+                               FontSize="11"
+                               FontStyle="Italic"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Value:" Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" VerticalAlignment="Center" Margin="0,5,5,0"/>
-                    <TextBox Grid.Row="1" Grid.Column="1"
-                             ToolTip="Enter the required version or path (e.g., ~>1.0.0)"
-                            
-                            
-                            
-                            
-                             Padding="5"
-                             Margin="0,5,0,0"
-                             Text="{Binding VmProjectDubManager.TxtAddDependencyValue}"
-                             />
-                </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                <Button Style="{StaticResource PrimaryButton}" Margin="0,10,0,15"
-                        Width="180"
-                        HorizontalAlignment="Center"
-                        Command="{Binding VmProjectDubManager.ButtonCommandAddDependency}"
-                        >
-                    <StackPanel Orientation="Horizontal">
-                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
-                        <TextBlock Text="Add Dependency" />
-                    </StackPanel>
-                </Button>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Kind:"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                                   VerticalAlignment="Center" Margin="0,0,10,6"/>
+                        <ComboBox Grid.Row="0" Grid.Column="1"
+                                  Style="{DynamicResource {x:Static vs:VsResourceKeys.ThemedDialogComboBoxStyleKey}}"
+                                  Padding="5"
+                                  Margin="0,0,0,6"
+                                  ItemsSource="{Binding VmProjectDubManager.DependencyKindList}"
+                                  SelectedItem="{Binding VmProjectDubManager.SelectedDependencyKind}"
+                                  ToolTip="Registry: a published package version. Git: a repository URL. Path: a folder next to the project." />
 
-                <Separator Margin="0,0,0,15"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Package:"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                                   VerticalAlignment="Center" Margin="0,0,10,6"/>
+                        <TextBox Grid.Row="1" Grid.Column="1"
+                                 Padding="5"
+                                 Margin="0,0,0,6"
+                                 Text="{Binding VmProjectDubManager.TxtDependencyName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Package name as dub knows it (e.g. vibe-d)." />
 
-                <TextBlock Text="Current Dependencies" 
-                           Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}" 
-                           FontWeight="SemiBold" 
-                           Margin="0,0,0,5"
-                           FontSize="13"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Version:"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                                   VerticalAlignment="Center" Margin="0,0,10,6"/>
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 Padding="5"
+                                 Margin="0,0,0,6"
+                                 Text="{Binding VmProjectDubManager.TxtDependencyVersion, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Registry range (e.g. ~>1.0.0) or a git tag/branch (e.g. v2.4.1). Required for Registry; optional for Git and Path." />
 
-                <ListBox 
-                    Height="150"
-                   
-                   
-                   
-                    SelectionMode="Single"
-                    Margin="0,0,0,10"
-                    ItemsSource="{Binding VmProjectDubManager.DependenciesListCollection}"
-                    SelectedItem="{Binding VmProjectDubManager.SelectedDependencyRemove}"
-                    >
-                </ListBox>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Repository:"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                                   VerticalAlignment="Center" Margin="0,0,10,6"
+                                   Visibility="{Binding VmProjectDubManager.IsDependencyGit, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBox Grid.Row="3" Grid.Column="1"
+                                 Padding="5"
+                                 Margin="0,0,0,6"
+                                 Text="{Binding VmProjectDubManager.TxtDependencyRepository, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Git URL (e.g. git+https://github.com/AripaStudio/JsonDAP.git)."
+                                 Visibility="{Binding VmProjectDubManager.IsDependencyGit, Converter={StaticResource BoolToVisibility}}" />
 
-                <Button Style="{StaticResource DangerButton}" 
-                    Width="220"
-                    HorizontalAlignment="Center"
-                    Command="{Binding VmProjectDubManager.ButtonCommandRemoveSelectedDependency}"
-                    >
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
-                            <TextBlock Text="Remove Selected Dependency" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Local path:"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                                   VerticalAlignment="Center" Margin="0,0,10,6"
+                                   Visibility="{Binding VmProjectDubManager.IsDependencyPath, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBox Grid.Row="4" Grid.Column="1"
+                                 Padding="5"
+                                 Margin="0,0,0,6"
+                                 Text="{Binding VmProjectDubManager.TxtDependencyPath, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Folder relative to dub.json (e.g. assets/JsonDAP-2.4.1)."
+                                 Visibility="{Binding VmProjectDubManager.IsDependencyPath, Converter={StaticResource BoolToVisibility}}" />
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Text="{Binding VmProjectDubManager.DependencyShapeHint}"
+                                   Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}"
+                                   FontFamily="Consolas"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,0" />
+                    </Grid>
+
+                    <Button Style="{StaticResource PrimaryButton}" Margin="0,10,0,15"
+                            Width="220"
+                            HorizontalAlignment="Center"
+                            Command="{Binding VmProjectDubManager.ButtonCommandAddDependency}">
+                        <StackPanel Orientation="Horizontal">
+                            <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}" Width="16" Height="16" Margin="0,0,5,0"/>
+                            <TextBlock Text="Add / Update Dependency" />
                         </StackPanel>
-                    </Button.Content>
-                </Button>
+                    </Button>
 
-            </StackPanel>
+                    <Separator Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Current Dependencies"
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.WindowTextKey}}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,3"
+                               FontSize="13"/>
+
+                    <TextBlock Text="(registry) is a version string; (git) and (path) are objects in dub.json."
+                               Foreground="{DynamicResource {x:Static vs:VsBrushes.GrayTextKey}}"
+                               FontSize="11"
+                               FontStyle="Italic"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,5"/>
+
+                    <ListBox
+                        Height="150"
+                        SelectionMode="Single"
+                        Margin="0,0,0,10"
+                        ItemsSource="{Binding VmProjectDubManager.DependenciesListCollection}"
+                        SelectedItem="{Binding VmProjectDubManager.SelectedDependencyRemove}"
+                        DisplayMemberPath="DisplayText" />
+
+                    <Button Style="{StaticResource DangerButton}"
+                        Width="240"
+                        HorizontalAlignment="Center"
+                        Command="{Binding VmProjectDubManager.ButtonCommandRemoveSelectedDependency}">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Remove}" Width="16" Height="16" Margin="0,0,5,0"/>
+                                <TextBlock Text="Remove Selected Dependency" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+
+                </StackPanel>
+
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>
